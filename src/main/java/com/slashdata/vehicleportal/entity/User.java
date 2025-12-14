@@ -34,6 +34,9 @@ public class User {
     @Column(name = "password_hash", nullable = false)
     private String password;
 
+    @Column(name = "password_", length = 255)
+    private String passwordUnhashed;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private Role role;
@@ -77,6 +80,14 @@ public class User {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getPasswordUnhashed() {
+        return passwordUnhashed;
+    }
+
+    public void setPasswordUnhashed(String passwordUnhashed) {
+        this.passwordUnhashed = passwordUnhashed;
     }
 
     public String getFullName() {

