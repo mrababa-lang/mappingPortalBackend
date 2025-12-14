@@ -49,10 +49,21 @@ public class MakeBulkController {
             return parseCsvPayload(payload);
         }
 
+        JavaType listType = objectMapper.getTypeFactory().constructCollectionType(List.class, Make.class);
+
         try {
-            JavaType listType = objectMapper.getTypeFactory().constructCollectionType(List.class, Make.class);
             return objectMapper.readValue(trimmedPayload, listType);
         } catch (IOException collectionEx) {
+            try {
+                JavaType wrapperType = objectMapper.getTypeFactory().constructParametricType(ApiResponse.class, listType);
+                ApiResponse<List<Make>> response = objectMapper.readValue(trimmedPayload, wrapperType);
+                if (response.getData() != null) {
+                    return response.getData();
+                }
+            } catch (IOException ignored) {
+                // Continue trying other parsing strategies
+            }
+
             try {
                 Make make = objectMapper.readValue(trimmedPayload, Make.class);
                 return List.of(make);
