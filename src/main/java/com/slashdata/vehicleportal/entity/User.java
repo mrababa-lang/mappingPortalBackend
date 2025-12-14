@@ -35,10 +35,14 @@ public class User {
     @Column(nullable = false, length = 20)
     private Role role;
 
-    private String status = "Active";
+    @Column(nullable = false, length = 20)
+    private String status = "ACTIVE";
 
     @Column(name = "last_active")
     private LocalDateTime lastActive = LocalDateTime.now();
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     public String getId() {
         return id;
@@ -94,5 +98,13 @@ public class User {
 
     public void setLastActive(LocalDateTime lastActive) {
         this.lastActive = lastActive;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 }

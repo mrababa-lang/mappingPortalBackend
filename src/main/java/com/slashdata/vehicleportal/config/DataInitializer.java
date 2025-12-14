@@ -6,6 +6,7 @@ import com.slashdata.vehicleportal.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import java.time.LocalDateTime;
 
 @Component
 public class DataInitializer implements CommandLineRunner {
@@ -20,13 +21,22 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        if (userRepository.count() == 0) {
-            User adminUser = new User();
-            adminUser.setName("Admin");
-            adminUser.setEmail("admin@firsttech.ae");
-            adminUser.setPassword(passwordEncoder.encode("password"));
-            adminUser.setRole(Role.ADMIN);
-            userRepository.save(adminUser);
+        String adminEmail = "admin@firsttech.ae";
+
+        if (userRepository.findByEmail(adminEmail).isPresent()) {
+            return;
         }
+
+        LocalDateTime now = LocalDateTime.now();
+
+        User adminUser = new User();
+        adminUser.setName("Admin");
+        adminUser.setEmail(adminEmail);
+        adminUser.setPassword(passwordEncoder.encode("Admin@123"));
+        adminUser.setRole(Role.ADMIN);
+        adminUser.setStatus("ACTIVE");
+        adminUser.setLastActive(now);
+        adminUser.setCreatedAt(now);
+        userRepository.save(adminUser);
     }
 }
