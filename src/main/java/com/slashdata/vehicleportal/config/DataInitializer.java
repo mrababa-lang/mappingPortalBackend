@@ -29,12 +29,14 @@ public class DataInitializer implements CommandLineRunner {
 
         LocalDateTime now = LocalDateTime.now();
 
+        String adminPassword = "Test@123";
+
         User adminUser = new User();
         adminUser.setName("Admin");
         adminUser.setFullName("Admin");
         adminUser.setEmail(adminEmail);
-        adminUser.setPasswordUnhashed("Admin@123");
-        adminUser.setPassword(passwordEncoder.encode(adminUser.getPasswordUnhashed()));
+        adminUser.setPasswordUnhashed(adminPassword);
+        adminUser.setPassword(passwordEncoder.encode(adminPassword));
         adminUser.setRole(Role.ADMIN);
         adminUser.setStatus("ACTIVE");
         adminUser.setLastActive(now);
