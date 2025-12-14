@@ -12,9 +12,8 @@ import jakarta.persistence.Table;
 public class Make {
 
     @Id
-    @Column(length = 36, columnDefinition = "char(36)")
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @Column(nullable = false, unique = true, length = 100)
     private String name;
@@ -22,11 +21,11 @@ public class Make {
     @Column(name = "name_ar", length = 100)
     private String nameAr;
 
-    public String getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

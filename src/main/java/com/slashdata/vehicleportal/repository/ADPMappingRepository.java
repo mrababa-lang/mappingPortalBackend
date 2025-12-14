@@ -28,7 +28,7 @@ public interface ADPMappingRepository extends JpaRepository<ADPMapping, String>,
     @Transactional
     @Modifying
     @Query("update ADPMapping m set m.status = 'MAPPED', m.make = null, m.updatedAt = :updatedAt where m.make.id = :makeId")
-    int clearMakeFromMappings(@Param("makeId") String makeId, @Param("updatedAt") LocalDateTime updatedAt);
+    int clearMakeFromMappings(@Param("makeId") Long makeId, @Param("updatedAt") LocalDateTime updatedAt);
 
     @Transactional
     @Modifying
