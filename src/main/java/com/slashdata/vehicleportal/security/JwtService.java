@@ -12,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import io.jsonwebtoken.io.DecodingException;
 
 @Service
 public class JwtService {
@@ -54,7 +55,7 @@ public class JwtService {
         byte[] keyBytes;
         try {
             keyBytes = Decoders.BASE64.decode(secret);
-        } catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException | DecodingException ex) {
             keyBytes = secret.getBytes(StandardCharsets.UTF_8);
         }
         return Keys.hmacShaKeyFor(keyBytes);
