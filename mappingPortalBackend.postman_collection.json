@@ -1,7 +1,7 @@
 {
   "info": {
-    "name": "Mapping Portal Backend",
-    "description": "Collection covering authentication, health, user, make/model, ADP master/mappings, and stats APIs.",
+    "name": "SlashData Vehicle Portal Backend",
+    "description": "Postman collection covering authentication, health, user, make/model, ADP master/mappings, and stats APIs for the SlashData Vehicle Portal.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -32,8 +32,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/auth/login",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "auth", "login"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -52,8 +58,13 @@
             "method": "GET",
             "url": {
               "raw": "{{baseUrl}}/api/health",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "health"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "health"
+              ]
             }
           }
         }
@@ -74,8 +85,13 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/users",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "users"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users"
+              ]
             }
           }
         },
@@ -95,12 +111,17 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/users",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "users"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users"
+              ]
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Jane Doe\",\n  \"email\": \"jane@example.com\",\n  \"password\": \"Password123!\",\n  \"role\": \"ADMIN\",\n  \"status\": \"Active\"\n}"
+              "raw": "{\n  \"name\": \"Jane Doe\",\n  \"fullName\": \"Jane A. Doe\",\n  \"email\": \"jane@example.com\",\n  \"password\": \"Password123!\",\n  \"role\": \"ADMIN\",\n  \"status\": \"ACTIVE\"\n}"
             }
           }
         },
@@ -120,12 +141,18 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/users/{{userId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "users", "{{userId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "{{userId}}"
+              ]
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Jane Doe\",\n  \"email\": \"jane@example.com\",\n  \"password\": \"UpdatedPass123!\",\n  \"role\": \"EDITOR\",\n  \"status\": \"Active\"\n}"
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"fullName\": \"Johnathan Doe\",\n  \"email\": \"john@example.com\",\n  \"role\": \"MAPPING_ADMIN\",\n  \"password\": \"NewPassword123!\",\n  \"status\": \"ACTIVE\"\n}"
             }
           }
         },
@@ -141,8 +168,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/users/{{userId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "users", "{{userId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "{{userId}}"
+              ]
             }
           }
         }
@@ -163,8 +196,13 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/makes",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "makes"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "makes"
+              ]
             }
           }
         },
@@ -184,12 +222,17 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/makes",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "makes"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "makes"
+              ]
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Toyota\",\n  \"nameAr\": \"تويوتا\"\n}"
+              "raw": "{\n  \"name\": \"Toyota\",\n  \"nameAr\": \"\u062a\u0648\u064a\u0648\u062a\u0627\"\n}"
             }
           }
         },
@@ -205,8 +248,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/makes/{{makeId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "makes", "{{makeId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "makes",
+                "{{makeId}}"
+              ]
             }
           }
         }
@@ -227,8 +276,13 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/models",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "models"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "models"
+              ]
             }
           }
         },
@@ -248,12 +302,17 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/models",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "models"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "models"
+              ]
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"make\": {\n    \"id\": \"{{makeId}}\"\n  },\n  \"type\": {\n    \"id\": \"{{vehicleTypeId}}\"\n  },\n  \"name\": \"Camry\",\n  \"nameAr\": \"كامري\"\n}"
+              "raw": "{\n  \"make\": {\n    \"id\": \"{{makeId}}\"\n  },\n  \"type\": {\n    \"id\": \"{{vehicleTypeId}}\"\n  },\n  \"name\": \"Camry\",\n  \"nameAr\": \"\u0643\u0627\u0645\u0631\u064a\"\n}"
             }
           }
         },
@@ -269,8 +328,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/models/{{modelId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "models", "{{modelId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "models",
+                "{{modelId}}"
+              ]
             }
           }
         }
@@ -291,12 +356,27 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/adp/master?q={{query}}&page=0&size=20",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "adp", "master"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "adp",
+                "master"
+              ],
               "query": [
-                {"key": "q", "value": "{{query}}"},
-                {"key": "page", "value": "0"},
-                {"key": "size", "value": "20"}
+                {
+                  "key": "q",
+                  "value": "{{query}}"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                }
               ]
             }
           }
@@ -317,16 +397,40 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/adp/mappings?reviewStatus={{reviewStatus}}&mappingType={{mappingType}}&dateFrom={{dateFrom}}&dateTo={{dateTo}}&page=0&size=20",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "adp", "mappings"],
+              "raw": "{{baseUrl}}/api/adp/mappings?reviewStatus=pending&mappingType=MAPPED&dateFrom={{dateFrom}}&dateTo={{dateTo}}&page=0&size=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "adp",
+                "mappings"
+              ],
               "query": [
-                {"key": "reviewStatus", "value": "{{reviewStatus}}"},
-                {"key": "mappingType", "value": "{{mappingType}}"},
-                {"key": "dateFrom", "value": "{{dateFrom}}"},
-                {"key": "dateTo", "value": "{{dateTo}}"},
-                {"key": "page", "value": "0"},
-                {"key": "size", "value": "20"}
+                {
+                  "key": "reviewStatus",
+                  "value": "pending"
+                },
+                {
+                  "key": "mappingType",
+                  "value": "MAPPED"
+                },
+                {
+                  "key": "dateFrom",
+                  "value": "{{dateFrom}}"
+                },
+                {
+                  "key": "dateTo",
+                  "value": "{{dateTo}}"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                }
               ]
             }
           }
@@ -347,8 +451,15 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/adp/mappings/{{adpId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "adp", "mappings", "{{adpId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "adp",
+                "mappings",
+                "{{adpId}}"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -368,8 +479,16 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/adp/mappings/{{adpId}}/approve",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "adp", "mappings", "{{adpId}}", "approve"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "adp",
+                "mappings",
+                "{{adpId}}",
+                "approve"
+              ]
             }
           }
         },
@@ -385,8 +504,16 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/adp/mappings/{{adpId}}/reject",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "adp", "mappings", "{{adpId}}", "reject"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "adp",
+                "mappings",
+                "{{adpId}}",
+                "reject"
+              ]
             }
           }
         },
@@ -406,8 +533,15 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/adp/mappings/bulk-action",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "adp", "mappings", "bulk-action"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "adp",
+                "mappings",
+                "bulk-action"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -432,8 +566,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/stats/dashboard",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "stats", "dashboard"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "stats",
+                "dashboard"
+              ]
             }
           }
         }
