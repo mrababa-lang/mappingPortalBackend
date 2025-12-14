@@ -1,0 +1,443 @@
+{
+  "info": {
+    "name": "Mapping Portal Backend",
+    "description": "Collection covering authentication, health, user, make/model, ADP master/mappings, and stats APIs.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"changeme\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "health"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users (admin)",
+      "item": [
+        {
+          "name": "List Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users"]
+            }
+          }
+        },
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Doe\",\n  \"email\": \"jane@example.com\",\n  \"password\": \"Password123!\",\n  \"role\": \"ADMIN\",\n  \"status\": \"Active\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userId}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Doe\",\n  \"email\": \"jane@example.com\",\n  \"password\": \"UpdatedPass123!\",\n  \"role\": \"EDITOR\",\n  \"status\": \"Active\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete User (soft delete)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Makes",
+      "item": [
+        {
+          "name": "List Makes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/makes",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "makes"]
+            }
+          }
+        },
+        {
+          "name": "Create Make",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/makes",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "makes"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Toyota\",\n  \"nameAr\": \"تويوتا\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Make",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/makes/{{makeId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "makes", "{{makeId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Models",
+      "item": [
+        {
+          "name": "List Models",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/models",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "models"]
+            }
+          }
+        },
+        {
+          "name": "Create Model",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/models",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "models"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"make\": {\n    \"id\": \"{{makeId}}\"\n  },\n  \"type\": {\n    \"id\": \"{{vehicleTypeId}}\"\n  },\n  \"name\": \"Camry\",\n  \"nameAr\": \"كامري\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Model",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/models/{{modelId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "models", "{{modelId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ADP Master",
+      "item": [
+        {
+          "name": "Search ADP Master",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/adp/master?q={{query}}&page=0&size=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "adp", "master"],
+              "query": [
+                {"key": "q", "value": "{{query}}"},
+                {"key": "page", "value": "0"},
+                {"key": "size", "value": "20"}
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ADP Mappings",
+      "item": [
+        {
+          "name": "Search ADP Mappings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/adp/mappings?reviewStatus={{reviewStatus}}&mappingType={{mappingType}}&dateFrom={{dateFrom}}&dateTo={{dateTo}}&page=0&size=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "adp", "mappings"],
+              "query": [
+                {"key": "reviewStatus", "value": "{{reviewStatus}}"},
+                {"key": "mappingType", "value": "{{mappingType}}"},
+                {"key": "dateFrom", "value": "{{dateFrom}}"},
+                {"key": "dateTo", "value": "{{dateTo}}"},
+                {"key": "page", "value": "0"},
+                {"key": "size", "value": "20"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Upsert ADP Mapping",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/adp/mappings/{{adpId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "adp", "mappings", "{{adpId}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"adpMasterId\": \"{{adpMasterId}}\",\n  \"makeId\": \"{{makeId}}\",\n  \"modelId\": \"{{modelId}}\",\n  \"status\": \"MAPPED\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Approve ADP Mapping",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/adp/mappings/{{adpId}}/approve",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "adp", "mappings", "{{adpId}}", "approve"]
+            }
+          }
+        },
+        {
+          "name": "Reject ADP Mapping",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/adp/mappings/{{adpId}}/reject",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "adp", "mappings", "{{adpId}}", "reject"]
+            }
+          }
+        },
+        {
+          "name": "Bulk Mapping Action",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/adp/mappings/bulk-action",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "adp", "mappings", "bulk-action"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"APPROVE\",\n  \"ids\": [\"{{mappingId1}}\", \"{{mappingId2}}\"]\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Stats",
+      "item": [
+        {
+          "name": "Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/stats/dashboard",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "stats", "dashboard"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
