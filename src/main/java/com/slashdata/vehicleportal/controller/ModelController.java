@@ -1,11 +1,13 @@
 package com.slashdata.vehicleportal.controller;
 
 import com.slashdata.vehicleportal.dto.ApiResponse;
+import com.slashdata.vehicleportal.dto.ModelRequest;
 import com.slashdata.vehicleportal.entity.Model;
 import com.slashdata.vehicleportal.repository.ModelRepository;
 import com.slashdata.vehicleportal.service.ModelService;
 import jakarta.validation.Valid;
 import java.util.List;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -35,8 +37,12 @@ public class ModelController {
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_ADMIN')")
-    public ApiResponse<Model> create(@Valid @RequestBody Model model) {
-        return ApiResponse.of(modelRepository.save(model));
+    public ResponseEntity<ApiResponse<Model>> create(@Valid @RequestBody ModelRequest request) {
+        try {
+            return ResponseEntity.ok(ApiResponse.of(modelService.create(request)));
+        } catch (DataIntegrityViolationException ex) {
+            return ResponseEntity.badRequest().body(ApiResponse.of(null));
+        }
     }
 
     @DeleteMapping("/{id}")
