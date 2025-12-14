@@ -37,14 +37,28 @@ public class MakeBulkController {
     }
 
     private List<Make> parsePayload(String payload, String contentType) {
-        if (contentType != null && contentType.toLowerCase().contains("text/csv")) {
+        if (payload == null || payload.isBlank()) {
+            return List.of();
+        }
+
+        boolean contentTypeIsCsv = contentType != null && contentType.toLowerCase().contains("text/csv");
+        String trimmedPayload = payload.trim();
+        boolean looksLikeJson = trimmedPayload.startsWith("[") || trimmedPayload.startsWith("{");
+
+        if (contentTypeIsCsv || !looksLikeJson) {
             return parseCsvPayload(payload);
         }
+
         try {
             JavaType listType = objectMapper.getTypeFactory().constructCollectionType(List.class, Make.class);
-            return objectMapper.readValue(payload, listType);
-        } catch (IOException ex) {
-            throw new IllegalArgumentException("Unable to parse make payload", ex);
+            return objectMapper.readValue(trimmedPayload, listType);
+        } catch (IOException collectionEx) {
+            try {
+                Make make = objectMapper.readValue(trimmedPayload, Make.class);
+                return List.of(make);
+            } catch (IOException singleObjectEx) {
+                return parseCsvPayload(payload);
+            }
         }
     }
 
