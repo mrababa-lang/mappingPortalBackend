@@ -30,7 +30,7 @@ public class AdpMappingService {
     }
 
     @Transactional
-    public ADPMapping upsert(Long adpId, AdpMappingRequest request) {
+    public ADPMapping upsert(String adpId, AdpMappingRequest request) {
         ADPMaster master = adpMasterRepository.findById(request.getAdpMasterId()).orElseThrow();
         ADPMapping mapping = adpMappingRepository.findByAdpMasterId(master.getId()).orElse(new ADPMapping());
         mapping.setAdpMaster(master);

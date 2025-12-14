@@ -1,27 +1,29 @@
 package com.slashdata.vehicleportal.entity;
 
-import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.CollectionTable;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
-import java.util.HashSet;
-import java.util.Set;
+import java.time.LocalDateTime;
 
+/**
+ * Represents an authenticated user in the system. Mirrors the Users table from the schema,
+ * using UUID primary keys and single role assignment.
+ */
 @Entity
 @Table(name = "users")
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private String id;
+
+    @Column(nullable = false, length = 100)
+    private String name;
 
     @Column(nullable = false, unique = true)
     private String email;
@@ -29,20 +31,29 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
-    @Column(name = "role")
     @Enumerated(EnumType.STRING)
-    private Set<Role> roles = new HashSet<>();
+    @Column(nullable = false, length = 20)
+    private Role role;
 
     private String status = "Active";
 
-    public Long getId() {
+    @Column(name = "last_active")
+    private LocalDateTime lastActive = LocalDateTime.now();
+
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getEmail() {
@@ -61,12 +72,12 @@ public class User {
         this.password = password;
     }
 
-    public Set<Role> getRoles() {
-        return roles;
+    public Role getRole() {
+        return role;
     }
 
-    public void setRoles(Set<Role> roles) {
-        this.roles = roles;
+    public void setRole(Role role) {
+        this.role = role;
     }
 
     public String getStatus() {
@@ -75,5 +86,13 @@ public class User {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public LocalDateTime getLastActive() {
+        return lastActive;
+    }
+
+    public void setLastActive(LocalDateTime lastActive) {
+        this.lastActive = lastActive;
     }
 }

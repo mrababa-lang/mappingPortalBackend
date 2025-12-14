@@ -36,7 +36,7 @@ public class MakeService {
     }
 
     @Transactional
-    public void deleteMake(Long id) {
+    public void deleteMake(String id) {
         Make make = makeRepository.findById(id).orElseThrow();
         List<Model> models = modelRepository.findByMake(make);
         LocalDateTime now = LocalDateTime.now();

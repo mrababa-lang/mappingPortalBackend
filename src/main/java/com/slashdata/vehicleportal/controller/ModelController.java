@@ -38,7 +38,7 @@ public class ModelController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable String id) {
         modelService.deleteModel(id);
         return ResponseEntity.noContent().build();
     }

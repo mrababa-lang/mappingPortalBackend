@@ -53,21 +53,21 @@ public class ADPMappingController {
     }
 
     @PutMapping("/{adpId}")
-    public ApiResponse<ADPMapping> upsert(@PathVariable Long adpId, @Valid @RequestBody AdpMappingRequest request) {
+    public ApiResponse<ADPMapping> upsert(@PathVariable String adpId, @Valid @RequestBody AdpMappingRequest request) {
         return ApiResponse.of(adpMappingService.upsert(adpId, request));
     }
 
     @PostMapping("/{adpId}/approve")
-    public ResponseEntity<Void> approve(@PathVariable Long adpId, Principal principal) {
+    public ResponseEntity<Void> approve(@PathVariable String adpId, Principal principal) {
         ADPMapping mapping = adpMappingRepository.findById(adpId).orElseThrow();
         mapping.setReviewedAt(LocalDateTime.now());
-        mapping.setReviewedBy(principal != null ? principal.getName() : "system");
+        mapping.setReviewedBy(null);
         adpMappingRepository.save(mapping);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{adpId}/reject")
-    public ResponseEntity<Void> reject(@PathVariable Long adpId) {
+    public ResponseEntity<Void> reject(@PathVariable String adpId) {
         adpMappingRepository.deleteById(adpId);
         return ResponseEntity.noContent().build();
     }

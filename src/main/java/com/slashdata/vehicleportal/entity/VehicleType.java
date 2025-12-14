@@ -5,32 +5,27 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 
 @Entity
-@Table(name = "models", uniqueConstraints = @UniqueConstraint(columnNames = {"make_id", "name"}))
-public class Model {
+@Table(name = "vehicle_types")
+public class VehicleType {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "make_id")
-    private Make make;
-
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "type_id")
-    private VehicleType type;
-
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false, unique = true, length = 100)
     private String name;
 
     @Column(name = "name_ar", length = 100)
     private String nameAr;
+
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
+    @Column(name = "description_ar", columnDefinition = "TEXT")
+    private String descriptionAr;
 
     public String getId() {
         return id;
@@ -38,22 +33,6 @@ public class Model {
 
     public void setId(String id) {
         this.id = id;
-    }
-
-    public Make getMake() {
-        return make;
-    }
-
-    public void setMake(Make make) {
-        this.make = make;
-    }
-
-    public VehicleType getType() {
-        return type;
-    }
-
-    public void setType(VehicleType type) {
-        this.type = type;
     }
 
     public String getName() {
@@ -70,5 +49,21 @@ public class Model {
 
     public void setNameAr(String nameAr) {
         this.nameAr = nameAr;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getDescriptionAr() {
+        return descriptionAr;
+    }
+
+    public void setDescriptionAr(String descriptionAr) {
+        this.descriptionAr = descriptionAr;
     }
 }

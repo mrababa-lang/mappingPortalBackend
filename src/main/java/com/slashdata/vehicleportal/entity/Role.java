@@ -1,7 +1,11 @@
 package com.slashdata.vehicleportal.entity;
 
 public enum Role {
-    ROLE_ADMIN,
-    ROLE_MAPPING_ADMIN,
-    ROLE_MAPPING_USER
+    ADMIN,
+    MAPPING_ADMIN,
+    MAPPING_USER;
+
+    public String toAuthority() {
+        return "ROLE_" + name();
+    }
 }

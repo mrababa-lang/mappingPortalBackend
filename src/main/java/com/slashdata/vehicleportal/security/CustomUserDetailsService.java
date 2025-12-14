@@ -22,7 +22,7 @@ public class CustomUserDetailsService implements UserDetailsService {
             .orElseThrow(() -> new UsernameNotFoundException("User not found"));
         return User.withUsername(user.getEmail())
             .password(user.getPassword())
-            .authorities(user.getRoles().stream().map(Enum::name).toArray(String[]::new))
+            .roles(user.getRole().name())
             .disabled("Inactive".equalsIgnoreCase(user.getStatus()))
             .build();
     }

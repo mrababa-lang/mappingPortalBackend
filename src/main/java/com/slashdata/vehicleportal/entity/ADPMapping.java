@@ -1,5 +1,6 @@
 package com.slashdata.vehicleportal.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -16,11 +17,11 @@ import java.time.LocalDateTime;
 public class ADPMapping {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private String id;
 
     @ManyToOne(optional = false)
-    @JoinColumn(name = "adp_master_id")
+    @JoinColumn(name = "adp_id")
     private ADPMaster adpMaster;
 
     @ManyToOne
@@ -34,15 +35,25 @@ public class ADPMapping {
     @Enumerated(EnumType.STRING)
     private MappingStatus status = MappingStatus.MAPPED;
 
-    private LocalDateTime reviewedAt;
-    private String reviewedBy;
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt = LocalDateTime.now();
 
-    public Long getId() {
+    @ManyToOne
+    @JoinColumn(name = "updated_by")
+    private User updatedBy;
+
+    @Column(name = "reviewed_at")
+    private LocalDateTime reviewedAt;
+
+    @ManyToOne
+    @JoinColumn(name = "reviewed_by")
+    private User reviewedBy;
+
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -78,6 +89,22 @@ public class ADPMapping {
         this.status = status;
     }
 
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public User getUpdatedBy() {
+        return updatedBy;
+    }
+
+    public void setUpdatedBy(User updatedBy) {
+        this.updatedBy = updatedBy;
+    }
+
     public LocalDateTime getReviewedAt() {
         return reviewedAt;
     }
@@ -86,19 +113,11 @@ public class ADPMapping {
         this.reviewedAt = reviewedAt;
     }
 
-    public String getReviewedBy() {
+    public User getReviewedBy() {
         return reviewedBy;
     }
 
-    public void setReviewedBy(String reviewedBy) {
+    public void setReviewedBy(User reviewedBy) {
         this.reviewedBy = reviewedBy;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
     }
 }

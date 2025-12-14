@@ -12,7 +12,7 @@ public class BulkActionRequest {
     private Action action;
 
     @NotEmpty
-    private List<Long> ids;
+    private List<String> ids;
 
     public Action getAction() {
         return action;
@@ -22,11 +22,11 @@ public class BulkActionRequest {
         this.action = action;
     }
 
-    public List<Long> getIds() {
+    public List<String> getIds() {
         return ids;
     }
 
-    public void setIds(List<Long> ids) {
+    public void setIds(List<String> ids) {
         this.ids = ids;
     }
 }

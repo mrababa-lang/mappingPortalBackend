@@ -2,30 +2,38 @@ package com.slashdata.vehicleportal.dto;
 
 import com.slashdata.vehicleportal.entity.Role;
 import com.slashdata.vehicleportal.entity.User;
-import java.util.Set;
 
 public class UserDto {
-
-    private Long id;
+    private String id;
+    private String name;
     private String email;
-    private Set<Role> roles;
     private String status;
+    private Role role;
 
     public static UserDto from(User user) {
         UserDto dto = new UserDto();
         dto.setId(user.getId());
+        dto.setName(user.getName());
         dto.setEmail(user.getEmail());
-        dto.setRoles(user.getRoles());
         dto.setStatus(user.getStatus());
+        dto.setRole(user.getRole());
         return dto;
     }
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getEmail() {
@@ -36,19 +44,19 @@ public class UserDto {
         this.email = email;
     }
 
-    public Set<Role> getRoles() {
-        return roles;
-    }
-
-    public void setRoles(Set<Role> roles) {
-        this.roles = roles;
-    }
-
     public String getStatus() {
         return status;
     }
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
     }
 }
