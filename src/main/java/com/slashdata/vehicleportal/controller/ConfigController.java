@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/config")
+@PreAuthorize("hasRole('ADMIN')")
 public class ConfigController {
 
     private final AppConfigRepository appConfigRepository;

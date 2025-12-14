@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/types")
+@PreAuthorize("isAuthenticated()")
 public class VehicleTypeController {
 
     private final VehicleTypeRepository vehicleTypeRepository;
@@ -31,7 +32,7 @@ public class VehicleTypeController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_ADMIN')")
     public ResponseEntity<ApiResponse<VehicleType>> create(@Valid @RequestBody VehicleType vehicleType) {
         if (vehicleTypeRepository.existsByNameIgnoreCase(vehicleType.getName())) {
             return ResponseEntity.badRequest().body(ApiResponse.of(null));
@@ -40,7 +41,7 @@ public class VehicleTypeController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable String id) {
         vehicleTypeRepository.deleteById(id);
         return ResponseEntity.noContent().build();

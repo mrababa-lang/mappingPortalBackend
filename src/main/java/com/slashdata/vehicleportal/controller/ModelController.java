@@ -7,6 +7,7 @@ import com.slashdata.vehicleportal.service.ModelService;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/models")
+@PreAuthorize("isAuthenticated()")
 public class ModelController {
 
     private final ModelRepository modelRepository;
@@ -33,11 +35,13 @@ public class ModelController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_ADMIN')")
     public ApiResponse<Model> create(@Valid @RequestBody Model model) {
         return ApiResponse.of(modelRepository.save(model));
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable String id) {
         modelService.deleteModel(id);
         return ResponseEntity.noContent().build();

@@ -4,6 +4,7 @@ import com.slashdata.vehicleportal.dto.AdpMappingRequest;
 import com.slashdata.vehicleportal.dto.ApiResponse;
 import com.slashdata.vehicleportal.entity.ADPMapping;
 import com.slashdata.vehicleportal.entity.MappingStatus;
+import com.slashdata.vehicleportal.entity.User;
 import com.slashdata.vehicleportal.repository.ADPMappingRepository;
 import com.slashdata.vehicleportal.service.AdpMappingService;
 import com.slashdata.vehicleportal.specification.ADPMappingSpecifications;
@@ -15,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/adp/mappings")
+@PreAuthorize("isAuthenticated()")
 public class ADPMappingController {
 
     private final ADPMappingRepository adpMappingRepository;
@@ -53,11 +56,14 @@ public class ADPMappingController {
     }
 
     @PutMapping("/{adpId}")
-    public ApiResponse<ADPMapping> upsert(@PathVariable String adpId, @Valid @RequestBody AdpMappingRequest request) {
-        return ApiResponse.of(adpMappingService.upsert(adpId, request));
+    public ApiResponse<ADPMapping> upsert(@PathVariable String adpId, @Valid @RequestBody AdpMappingRequest request,
+                                          Principal principal) {
+        User actor = adpMappingService.findUser(principal != null ? principal.getName() : null);
+        return ApiResponse.of(adpMappingService.upsert(adpId, request, actor));
     }
 
     @GetMapping("/review")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_ADMIN')")
     public ApiResponse<?> reviewQueue(@RequestParam(value = "status", required = false) String reviewStatus,
                                       Pageable pageable) {
         Specification<ADPMapping> spec = ADPMappingSpecifications.reviewStatus(reviewStatus);
@@ -65,6 +71,7 @@ public class ADPMappingController {
     }
 
     @PostMapping("/{adpId}/approve")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_ADMIN')")
     public ResponseEntity<Void> approve(@PathVariable String adpId, Principal principal) {
         ADPMapping mapping = adpMappingRepository.findById(adpId).orElseThrow();
         mapping.setReviewedAt(LocalDateTime.now());
@@ -76,7 +83,8 @@ public class ADPMappingController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/{adpId}/reject")
+    @DeleteMapping("/{adpId}/reject")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_ADMIN')")
     public ResponseEntity<Void> reject(@PathVariable String adpId) {
         adpMappingRepository.deleteById(adpId);
         return ResponseEntity.noContent().build();
