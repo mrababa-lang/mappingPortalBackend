@@ -5,7 +5,6 @@ import com.slashdata.vehicleportal.entity.User;
 
 public class UserDto {
     private Long id;
-    private String name = "";
     private String fullName = "";
     private String email;
     private String status;
@@ -14,7 +13,6 @@ public class UserDto {
     public static UserDto from(User user) {
         UserDto dto = new UserDto();
         dto.setId(user.getId());
-        dto.setName(user.getName());
         dto.setFullName(user.getFullName());
         dto.setEmail(user.getEmail());
         dto.setStatus(user.getStatus());
@@ -28,14 +26,6 @@ public class UserDto {
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 
     public String getEmail() {

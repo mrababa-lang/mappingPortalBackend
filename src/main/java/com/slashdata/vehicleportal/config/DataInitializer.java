@@ -32,7 +32,6 @@ public class DataInitializer implements CommandLineRunner {
         String adminPassword = "Test@123";
 
         User adminUser = new User();
-        adminUser.setName("Admin");
         adminUser.setFullName("Admin");
         adminUser.setEmail(adminEmail);
         adminUser.setPasswordUnhashed(adminPassword);
