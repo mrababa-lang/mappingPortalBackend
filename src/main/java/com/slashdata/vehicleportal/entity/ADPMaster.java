@@ -12,34 +12,42 @@ import jakarta.persistence.Table;
 public class ADPMaster {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private String id;
 
-    @Column(name = "adp_id", unique = true)
-    private String adpId;
-
-    @Column(name = "make_reference")
+    @Column(name = "adp_make_id", length = 50)
     private String adpMakeId;
 
-    @Column(name = "model_reference")
+    @Column(name = "make_en_desc", length = 200)
+    private String makeEnDesc;
+
+    @Column(name = "make_ar_desc", length = 200)
+    private String makeArDesc;
+
+    @Column(name = "adp_model_id", length = 50)
     private String adpModelId;
 
-    private String description;
+    @Column(name = "model_en_desc", length = 200)
+    private String modelEnDesc;
 
-    public Long getId() {
+    @Column(name = "model_ar_desc", length = 200)
+    private String modelArDesc;
+
+    @Column(name = "adp_type_id", length = 50)
+    private String adpTypeId;
+
+    @Column(name = "type_en_desc", length = 200)
+    private String typeEnDesc;
+
+    @Column(name = "type_ar_desc", length = 200)
+    private String typeArDesc;
+
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
-    }
-
-    public String getAdpId() {
-        return adpId;
-    }
-
-    public void setAdpId(String adpId) {
-        this.adpId = adpId;
     }
 
     public String getAdpMakeId() {
@@ -50,6 +58,22 @@ public class ADPMaster {
         this.adpMakeId = adpMakeId;
     }
 
+    public String getMakeEnDesc() {
+        return makeEnDesc;
+    }
+
+    public void setMakeEnDesc(String makeEnDesc) {
+        this.makeEnDesc = makeEnDesc;
+    }
+
+    public String getMakeArDesc() {
+        return makeArDesc;
+    }
+
+    public void setMakeArDesc(String makeArDesc) {
+        this.makeArDesc = makeArDesc;
+    }
+
     public String getAdpModelId() {
         return adpModelId;
     }
@@ -58,11 +82,43 @@ public class ADPMaster {
         this.adpModelId = adpModelId;
     }
 
-    public String getDescription() {
-        return description;
+    public String getModelEnDesc() {
+        return modelEnDesc;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public void setModelEnDesc(String modelEnDesc) {
+        this.modelEnDesc = modelEnDesc;
+    }
+
+    public String getModelArDesc() {
+        return modelArDesc;
+    }
+
+    public void setModelArDesc(String modelArDesc) {
+        this.modelArDesc = modelArDesc;
+    }
+
+    public String getAdpTypeId() {
+        return adpTypeId;
+    }
+
+    public void setAdpTypeId(String adpTypeId) {
+        this.adpTypeId = adpTypeId;
+    }
+
+    public String getTypeEnDesc() {
+        return typeEnDesc;
+    }
+
+    public void setTypeEnDesc(String typeEnDesc) {
+        this.typeEnDesc = typeEnDesc;
+    }
+
+    public String getTypeArDesc() {
+        return typeArDesc;
+    }
+
+    public void setTypeArDesc(String typeArDesc) {
+        this.typeArDesc = typeArDesc;
     }
 }

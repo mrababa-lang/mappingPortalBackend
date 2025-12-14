@@ -19,7 +19,7 @@ public class ModelService {
     }
 
     @Transactional
-    public void deleteModel(Long id) {
+    public void deleteModel(String id) {
         Model model = modelRepository.findById(id).orElseThrow();
         adpMappingRepository.clearModelsFromMappings(java.util.List.of(model.getId()), LocalDateTime.now());
         modelRepository.delete(model);
