@@ -36,6 +36,14 @@ public class MakeService {
     }
 
     @Transactional
+    public List<Make> bulkSave(List<Make> makes) {
+        if (makes == null || makes.isEmpty()) {
+            return List.of();
+        }
+        return makeRepository.saveAll(makes);
+    }
+
+    @Transactional
     public void deleteMake(Long id) {
         Make make = makeRepository.findById(id).orElseThrow();
         List<Model> models = modelRepository.findByMake(make);
