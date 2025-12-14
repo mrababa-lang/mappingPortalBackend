@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 public class ADPMakeMapping {
 
     @Id
+    @Column(length = 36, columnDefinition = "char(36)")
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 

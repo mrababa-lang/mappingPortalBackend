@@ -15,6 +15,7 @@ import jakarta.persistence.UniqueConstraint;
 public class Model {
 
     @Id
+    @Column(length = 36, columnDefinition = "char(36)")
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 

@@ -12,6 +12,7 @@ import jakarta.persistence.Table;
 public class Make {
 
     @Id
+    @Column(length = 36, columnDefinition = "char(36)")
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
