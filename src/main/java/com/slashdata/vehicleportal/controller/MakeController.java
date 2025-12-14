@@ -40,7 +40,7 @@ public class MakeController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable String id) {
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         makeService.deleteMake(id);
         return ResponseEntity.noContent().build();
     }

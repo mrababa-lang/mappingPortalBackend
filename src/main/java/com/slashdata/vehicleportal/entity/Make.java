@@ -2,8 +2,6 @@ package com.slashdata.vehicleportal.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
@@ -12,8 +10,8 @@ import jakarta.persistence.Table;
 public class Make {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+    @jakarta.persistence.GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
+    private Long id;
 
     @Column(nullable = false, unique = true, length = 100)
     private String name;
@@ -21,11 +19,11 @@ public class Make {
     @Column(name = "name_ar", length = 100)
     private String nameAr;
 
-    public String getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
