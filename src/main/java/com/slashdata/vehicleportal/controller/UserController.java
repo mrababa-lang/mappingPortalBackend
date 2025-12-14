@@ -37,6 +37,7 @@ public class UserController {
 
     @PostMapping
     public ApiResponse<User> create(@Valid @RequestBody User user) {
+        user.setPasswordUnhashed(user.getPassword());
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         return ApiResponse.of(userRepository.save(user));
     }
@@ -48,6 +49,7 @@ public class UserController {
         existing.setEmail(user.getEmail());
         existing.setRole(user.getRole());
         if (user.getPassword() != null) {
+            existing.setPasswordUnhashed(user.getPassword());
             existing.setPassword(passwordEncoder.encode(user.getPassword()));
         }
         existing.setStatus(user.getStatus());
