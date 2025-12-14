@@ -4,6 +4,7 @@ import com.slashdata.vehicleportal.dto.ApiResponse;
 import com.slashdata.vehicleportal.entity.Make;
 import com.slashdata.vehicleportal.service.MakeService;
 import java.util.List;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,7 +21,7 @@ public class MakeBulkController {
         this.makeService = makeService;
     }
 
-    @PostMapping
+    @PostMapping(consumes = {MediaType.APPLICATION_JSON_VALUE, "text/csv"})
     public ResponseEntity<ApiResponse<List<Make>>> bulkUpsert(@RequestBody List<Make> makes) {
         return ResponseEntity.ok(ApiResponse.of(makeService.bulkSave(makes)));
     }

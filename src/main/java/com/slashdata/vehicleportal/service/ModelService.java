@@ -9,6 +9,8 @@ import com.slashdata.vehicleportal.repository.MakeRepository;
 import com.slashdata.vehicleportal.repository.ModelRepository;
 import com.slashdata.vehicleportal.repository.VehicleTypeRepository;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,6 +41,26 @@ public class ModelService {
         model.setNameAr(request.getNameAr());
 
         return modelRepository.save(model);
+    }
+
+    @Transactional
+    public List<Model> bulkCreate(List<ModelRequest> requests) {
+        if (requests == null || requests.isEmpty()) {
+            return List.of();
+        }
+        List<Model> models = new ArrayList<>();
+        for (ModelRequest request : requests) {
+            Make make = makeRepository.findById(request.getMakeId()).orElseThrow();
+            VehicleType vehicleType = vehicleTypeRepository.findById(request.getTypeId()).orElseThrow();
+
+            Model model = new Model();
+            model.setMake(make);
+            model.setType(vehicleType);
+            model.setName(request.getName());
+            model.setNameAr(request.getNameAr());
+            models.add(model);
+        }
+        return modelRepository.saveAll(models);
     }
 
     @Transactional

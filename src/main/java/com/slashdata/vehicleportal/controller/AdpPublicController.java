@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -35,7 +36,7 @@ public class AdpPublicController {
         return ApiResponse.of(extractDistinctAttributes(AttributeSelector.TYPE));
     }
 
-    @PostMapping("/master/upload")
+    @PostMapping(value = "/master/upload", consumes = {MediaType.APPLICATION_JSON_VALUE, "text/csv"})
     public ResponseEntity<ApiResponse<List<ADPMaster>>> uploadMaster(@RequestBody List<ADPMaster> records) {
         adpMasterRepository.deleteAll();
         List<ADPMaster> saved = adpMasterRepository.saveAll(records != null ? records : List.of());
