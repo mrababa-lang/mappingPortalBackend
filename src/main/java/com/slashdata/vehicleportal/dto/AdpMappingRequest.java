@@ -8,7 +8,7 @@ public class AdpMappingRequest {
     @NotNull
     private String adpMasterId;
 
-    private String makeId;
+    private Long makeId;
     private String modelId;
 
     @NotNull
@@ -22,11 +22,11 @@ public class AdpMappingRequest {
         this.adpMasterId = adpMasterId;
     }
 
-    public String getMakeId() {
+    public Long getMakeId() {
         return makeId;
     }
 
-    public void setMakeId(String makeId) {
+    public void setMakeId(Long makeId) {
         this.makeId = makeId;
     }
 

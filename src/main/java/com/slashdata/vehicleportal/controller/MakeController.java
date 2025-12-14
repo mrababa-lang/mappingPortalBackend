@@ -44,7 +44,7 @@ public class MakeController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_ADMIN')")
-    public ResponseEntity<Void> delete(@PathVariable String id) {
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         makeService.deleteMake(id);
         return ResponseEntity.noContent().build();
     }
