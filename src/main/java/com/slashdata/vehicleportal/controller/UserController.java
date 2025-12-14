@@ -46,7 +46,7 @@ public class UserController {
     @PutMapping("/{id}")
     public ApiResponse<User> update(@PathVariable Long id, @Valid @RequestBody User user) {
         User existing = userRepository.findById(id).orElseThrow();
-        existing.setName(user.getName());
+        existing.setFullName(user.getFullName());
         existing.setEmail(user.getEmail());
         existing.setRole(user.getRole());
         if (user.getPassword() != null && !user.getPassword().isBlank()) {
