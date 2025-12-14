@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/makes")
-@PreAuthorize("isAuthenticated()")
 public class MakeController {
 
     private final MakeService makeService;
