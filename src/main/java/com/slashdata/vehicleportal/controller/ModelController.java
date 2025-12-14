@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/models")
-@PreAuthorize("isAuthenticated()")
 public class ModelController {
 
     private final ModelRepository modelRepository;

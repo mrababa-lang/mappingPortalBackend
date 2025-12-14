@@ -47,6 +47,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/health/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/models", "/api/makes").permitAll()
+                .requestMatchers("/api/makes/bulk").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/makes/bulk").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/adp/master/upload").permitAll()
                 .requestMatchers("/api/adp/**").permitAll()
