@@ -5,6 +5,7 @@ import com.slashdata.vehicleportal.dto.ApiResponse;
 import com.slashdata.vehicleportal.repository.ADPMappingRepository;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/tracking")
+@PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_ADMIN')")
 public class TrackingController {
 
     private final ADPMappingRepository adpMappingRepository;

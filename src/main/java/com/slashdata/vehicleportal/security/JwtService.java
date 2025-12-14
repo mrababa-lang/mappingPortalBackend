@@ -9,10 +9,12 @@ import java.security.Key;
 import java.util.Date;
 import java.util.function.Function;
 import java.nio.charset.StandardCharsets;
+import io.jsonwebtoken.io.DecodingException;
+import java.util.HashMap;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
-import io.jsonwebtoken.io.DecodingException;
 
 @Service
 public class JwtService {
@@ -23,8 +25,13 @@ public class JwtService {
     @Value("${app.jwt.expiration-ms:86400000}")
     private long expirationMs;
 
-    public String generateToken(UserDetails userDetails) {
+    public String generateToken(UserDetails userDetails, com.slashdata.vehicleportal.entity.User user) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", user.getId());
+        claims.put("role", user.getRole().name());
+
         return Jwts.builder()
+            .setClaims(claims)
             .setSubject(userDetails.getUsername())
             .setIssuedAt(new Date())
             .setExpiration(new Date(System.currentTimeMillis() + expirationMs))

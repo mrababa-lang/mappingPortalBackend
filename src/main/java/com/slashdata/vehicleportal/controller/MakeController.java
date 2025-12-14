@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/makes")
+@PreAuthorize("isAuthenticated()")
 public class MakeController {
 
     private final MakeService makeService;
@@ -31,6 +33,7 @@ public class MakeController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_ADMIN')")
     public ResponseEntity<ApiResponse<Make>> create(@Valid @RequestBody Make make) {
         try {
             return ResponseEntity.ok(ApiResponse.of(makeService.create(make)));
@@ -40,6 +43,7 @@ public class MakeController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable String id) {
         makeService.deleteMake(id);
         return ResponseEntity.noContent().build();

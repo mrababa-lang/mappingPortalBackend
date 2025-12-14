@@ -42,7 +42,7 @@ public class AuthController {
             .orElseThrow();
         user.setLastActive(LocalDateTime.now());
         userRepository.save(user);
-        String token = jwtService.generateToken(principal);
+        String token = jwtService.generateToken(principal, user);
         LoginResponse response = new LoginResponse(token, UserDto.from(user));
         return ResponseEntity.ok(ApiResponse.of(response));
     }

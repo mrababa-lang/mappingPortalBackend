@@ -4,6 +4,7 @@ import com.slashdata.vehicleportal.dto.AdpMappingRequest;
 import com.slashdata.vehicleportal.entity.ADPMapping;
 import com.slashdata.vehicleportal.entity.ADPMaster;
 import com.slashdata.vehicleportal.entity.Make;
+import com.slashdata.vehicleportal.entity.MappingStatus;
 import com.slashdata.vehicleportal.entity.Model;
 import com.slashdata.vehicleportal.entity.User;
 import com.slashdata.vehicleportal.repository.ADPMappingRepository;
@@ -35,7 +36,7 @@ public class AdpMappingService {
     }
 
     @Transactional
-    public ADPMapping upsert(String adpId, AdpMappingRequest request) {
+    public ADPMapping upsert(String adpId, AdpMappingRequest request, User actor) {
         ADPMaster master = adpMasterRepository.findById(request.getAdpMasterId()).orElseThrow();
         ADPMapping mapping = adpMappingRepository.findByAdpMasterId(master.getId()).orElse(new ADPMapping());
         mapping.setAdpMaster(master);
@@ -51,14 +52,20 @@ public class AdpMappingService {
         } else {
             mapping.setModel(null);
         }
-        mapping.setStatus(request.getStatus());
+        mapping.setStatus(request.getStatus() != null ? request.getStatus() : MappingStatus.MAPPED);
         mapping.setReviewedAt(null);
         mapping.setReviewedBy(null);
         mapping.setUpdatedAt(LocalDateTime.now());
+        if (actor != null) {
+            mapping.setUpdatedBy(actor);
+        }
         return adpMappingRepository.save(mapping);
     }
 
     public User findUser(String email) {
+        if (email == null) {
+            return null;
+        }
         return userRepository.findByEmail(email).orElse(null);
     }
 }
