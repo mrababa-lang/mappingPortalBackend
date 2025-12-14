@@ -57,16 +57,26 @@ public class ADPMappingController {
         return ApiResponse.of(adpMappingService.upsert(adpId, request));
     }
 
+    @GetMapping("/review")
+    public ApiResponse<?> reviewQueue(@RequestParam(value = "status", required = false) String reviewStatus,
+                                      Pageable pageable) {
+        Specification<ADPMapping> spec = ADPMappingSpecifications.reviewStatus(reviewStatus);
+        return ApiResponse.fromPage(adpMappingRepository.findAll(spec, pageable));
+    }
+
     @PostMapping("/{adpId}/approve")
     public ResponseEntity<Void> approve(@PathVariable String adpId, Principal principal) {
         ADPMapping mapping = adpMappingRepository.findById(adpId).orElseThrow();
         mapping.setReviewedAt(LocalDateTime.now());
         mapping.setReviewedBy(null);
+        if (principal != null) {
+            mapping.setReviewedBy(adpMappingService.findUser(principal.getName()));
+        }
         adpMappingRepository.save(mapping);
         return ResponseEntity.ok().build();
     }
 
-    @DeleteMapping("/{adpId}/reject")
+    @PostMapping("/{adpId}/reject")
     public ResponseEntity<Void> reject(@PathVariable String adpId) {
         adpMappingRepository.deleteById(adpId);
         return ResponseEntity.noContent().build();

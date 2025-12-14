@@ -3,6 +3,7 @@ package com.slashdata.vehicleportal.repository;
 import com.slashdata.vehicleportal.entity.ADPMapping;
 import com.slashdata.vehicleportal.entity.MappingStatus;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -14,6 +15,10 @@ import org.springframework.transaction.annotation.Transactional;
 public interface ADPMappingRepository extends JpaRepository<ADPMapping, String>, JpaSpecificationExecutor<ADPMapping> {
 
     Optional<ADPMapping> findByAdpMasterId(String adpMasterId);
+
+    long countByStatus(MappingStatus status);
+
+    List<ADPMapping> findTop10ByOrderByUpdatedAtDesc();
 
     @Transactional
     @Modifying
@@ -34,4 +39,9 @@ public interface ADPMappingRepository extends JpaRepository<ADPMapping, String>,
     @Modifying
     @Query("delete from ADPMapping m where m.id in :ids")
     int deleteAllByIds(@Param("ids") Iterable<String> ids);
+
+    @Query(value = "SELECT DATE(updated_at) as date, COUNT(*) as cnt FROM adp_mappings "
+        + "WHERE (:from is null or updated_at >= :from) and (:to is null or updated_at <= :to) "
+        + "GROUP BY DATE(updated_at) ORDER BY DATE(updated_at)", nativeQuery = true)
+    List<Object[]> aggregateByDate(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
 }
