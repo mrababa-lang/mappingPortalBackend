@@ -42,7 +42,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ApiResponse<User> update(@PathVariable String id, @Valid @RequestBody User user) {
+    public ApiResponse<User> update(@PathVariable Long id, @Valid @RequestBody User user) {
         User existing = userRepository.findById(id).orElseThrow();
         existing.setName(user.getName());
         existing.setEmail(user.getEmail());
@@ -55,7 +55,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable String id) {
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         User existing = userRepository.findById(id).orElseThrow();
         existing.setStatus("Inactive");
         userRepository.save(existing);
