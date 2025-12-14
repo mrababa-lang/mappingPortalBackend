@@ -3,6 +3,6 @@ package com.slashdata.vehicleportal.repository;
 import com.slashdata.vehicleportal.entity.VehicleType;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface VehicleTypeRepository extends JpaRepository<VehicleType, String> {
+public interface VehicleTypeRepository extends JpaRepository<VehicleType, Long> {
     boolean existsByNameIgnoreCase(String name);
 }

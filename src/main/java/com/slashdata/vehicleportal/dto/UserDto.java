@@ -4,7 +4,7 @@ import com.slashdata.vehicleportal.entity.Role;
 import com.slashdata.vehicleportal.entity.User;
 
 public class UserDto {
-    private String id;
+    private Long id;
     private String name;
     private String email;
     private String status;
@@ -20,11 +20,11 @@ public class UserDto {
         return dto;
     }
 
-    public String getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

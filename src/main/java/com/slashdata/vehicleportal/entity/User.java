@@ -4,23 +4,21 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 
 /**
  * Represents an authenticated user in the system. Mirrors the Users table from the schema,
- * using UUID primary keys and single role assignment.
+ * using auto-incrementing numeric primary keys and single role assignment.
  */
 @Entity
 @Table(name = "users")
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+    @jakarta.persistence.GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
+    private Long id;
 
     @Column(nullable = false, length = 100)
     private String name;
@@ -40,11 +38,11 @@ public class User {
     @Column(name = "last_active")
     private LocalDateTime lastActive = LocalDateTime.now();
 
-    public String getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

@@ -31,8 +31,9 @@ public class AdpMappingService {
 
     @Transactional
     public ADPMapping upsert(String adpId, AdpMappingRequest request) {
-        ADPMaster master = adpMasterRepository.findById(request.getAdpMasterId()).orElseThrow();
+        ADPMaster master = adpMasterRepository.findById(adpId).orElseThrow();
         ADPMapping mapping = adpMappingRepository.findByAdpMasterId(master.getId()).orElse(new ADPMapping());
+        mapping.setId(master.getId());
         mapping.setAdpMaster(master);
         if (request.getMakeId() != null) {
             Make make = makeRepository.findById(request.getMakeId()).orElseThrow();
