@@ -5,10 +5,12 @@ import com.slashdata.vehicleportal.entity.ADPMapping;
 import com.slashdata.vehicleportal.entity.ADPMaster;
 import com.slashdata.vehicleportal.entity.Make;
 import com.slashdata.vehicleportal.entity.Model;
+import com.slashdata.vehicleportal.entity.User;
 import com.slashdata.vehicleportal.repository.ADPMappingRepository;
 import com.slashdata.vehicleportal.repository.ADPMasterRepository;
 import com.slashdata.vehicleportal.repository.MakeRepository;
 import com.slashdata.vehicleportal.repository.ModelRepository;
+import com.slashdata.vehicleportal.repository.UserRepository;
 import java.time.LocalDateTime;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,13 +22,16 @@ public class AdpMappingService {
     private final ADPMasterRepository adpMasterRepository;
     private final MakeRepository makeRepository;
     private final ModelRepository modelRepository;
+    private final UserRepository userRepository;
 
     public AdpMappingService(ADPMappingRepository adpMappingRepository, ADPMasterRepository adpMasterRepository,
-                             MakeRepository makeRepository, ModelRepository modelRepository) {
+                             MakeRepository makeRepository, ModelRepository modelRepository,
+                             UserRepository userRepository) {
         this.adpMappingRepository = adpMappingRepository;
         this.adpMasterRepository = adpMasterRepository;
         this.makeRepository = makeRepository;
         this.modelRepository = modelRepository;
+        this.userRepository = userRepository;
     }
 
     @Transactional
@@ -51,5 +56,9 @@ public class AdpMappingService {
         mapping.setReviewedBy(null);
         mapping.setUpdatedAt(LocalDateTime.now());
         return adpMappingRepository.save(mapping);
+    }
+
+    public User findUser(String email) {
+        return userRepository.findByEmail(email).orElse(null);
     }
 }

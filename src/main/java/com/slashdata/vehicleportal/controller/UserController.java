@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -48,7 +49,7 @@ public class UserController {
         existing.setName(user.getName());
         existing.setEmail(user.getEmail());
         existing.setRole(user.getRole());
-        if (user.getPassword() != null) {
+        if (user.getPassword() != null && !user.getPassword().isBlank()) {
             existing.setPasswordUnhashed(user.getPassword());
             existing.setPassword(passwordEncoder.encode(user.getPassword()));
         }
@@ -57,10 +58,14 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable Long id, @RequestParam(defaultValue = "false") boolean hard) {
         User existing = userRepository.findById(id).orElseThrow();
-        existing.setStatus("Inactive");
-        userRepository.save(existing);
+        if (hard) {
+            userRepository.delete(existing);
+        } else {
+            existing.setStatus("Inactive");
+            userRepository.save(existing);
+        }
         return ResponseEntity.noContent().build();
     }
 }
