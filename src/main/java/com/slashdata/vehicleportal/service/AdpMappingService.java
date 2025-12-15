@@ -55,19 +55,15 @@ public class AdpMappingService {
         ADPMaster master = adpMasterRepository.findById(adpId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "ADP master not found"));
 
-        Make make = resolveMake(request.getMakeId());
-        Model model = resolveModel(request.getModelId());
-
-        validateStatusRules(request.getStatus(), make, model);
-        if (model != null && make != null && !Objects.equals(model.getMake().getId(), make.getId())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Model does not belong to make");
-        }
+        MappingStatus desiredStatus = request.getStatus();
+        Make make = resolveMakeForStatus(desiredStatus, request.getMakeId());
+        Model model = resolveModelForStatus(desiredStatus, request.getModelId());
+        validateBelongsToMake(desiredStatus, make, model);
 
         ADPMapping mapping = adpMappingRepository.findByAdpMasterId(master.getId()).orElse(new ADPMapping());
         boolean isNew = mapping.getId() == null;
         mapping.setAdpMaster(master);
 
-        MappingStatus desiredStatus = request.getStatus();
         Model desiredModel = normalizeModel(desiredStatus, model);
         Make desiredMake = normalizeMake(desiredStatus, make);
 
@@ -153,6 +149,50 @@ public class AdpMappingService {
         return userRepository.findByEmail(email).orElse(null);
     }
 
+    private Make resolveMakeForStatus(MappingStatus status, Long makeId) {
+        switch (status) {
+            case MAPPED:
+                if (makeId == null) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Make is required when status is MAPPED");
+                }
+                return resolveMake(makeId);
+            case MISSING_MODEL:
+                if (makeId == null) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Make is required when status is MISSING_MODEL");
+                }
+                return resolveMake(makeId);
+            case MISSING_MAKE:
+                return null;
+            default:
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported status");
+        }
+    }
+
+    private Model resolveModelForStatus(MappingStatus status, String modelId) {
+        switch (status) {
+            case MAPPED:
+                if (modelId == null) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Model is required when status is MAPPED");
+                }
+                return resolveModel(modelId);
+            case MISSING_MODEL:
+            case MISSING_MAKE:
+                return null;
+            default:
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported status");
+        }
+    }
+
+    private void validateBelongsToMake(MappingStatus status, Make make, Model model) {
+        if (status == MappingStatus.MAPPED && model != null && make != null
+            && !Objects.equals(model.getMake().getId(), make.getId())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Model does not belong to make");
+        }
+    }
+
     private Make resolveMake(Long makeId) {
         if (makeId == null) {
             return null;
@@ -167,25 +207,6 @@ public class AdpMappingService {
         }
         return modelRepository.findById(modelId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Model not found"));
-    }
-
-    private void validateStatusRules(MappingStatus status, Make make, Model model) {
-        switch (status) {
-            case MAPPED:
-                if (make == null || model == null) {
-                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Make and model are required when status is MAPPED");
-                }
-                break;
-            case MISSING_MODEL:
-                if (make == null) {
-                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Make is required when status is MISSING_MODEL");
-                }
-                break;
-            case MISSING_MAKE:
-                break;
-            default:
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported status");
-        }
     }
 
     private Model normalizeModel(MappingStatus status, Model model) {

@@ -42,26 +42,30 @@ public interface ADPMappingRepository extends JpaRepository<ADPMapping, String>,
             reviewer.id,
             reviewer.fullName
         )
-        from ADPMapping mapping
-        join mapping.adpMaster master
+        from ADPMaster master
+        left join ADPMapping mapping on mapping.adpMaster = master
         left join mapping.make make
         left join mapping.model model
         left join mapping.updatedBy updater
         left join mapping.reviewedBy reviewer
         where (:query is null or lower(master.makeEnDesc) like lower(concat('%', :query, '%'))
             or lower(master.modelEnDesc) like lower(concat('%', :query, '%')))
-          and (:mappingStatus is null or mapping.status = :mappingStatus)
+          and (
+              (:unmappedOnly = true and mapping.id is null)
+              or (:unmappedOnly = false and (:mappingStatus is null or mapping.status = :mappingStatus))
+          )
           and (
               :reviewStatus = 'all'
               or (:reviewStatus = 'pending' and mapping.reviewedAt is null)
               or (:reviewStatus = 'reviewed' and mapping.reviewedAt is not null)
           )
           and (:userId is null or mapping.updatedBy.id = :userId)
-          and (:from is null or mapping.updatedAt >= :from)
-          and (:to is null or mapping.updatedAt <= :to)
+          and (:from is null or mapping.updatedAt is null or mapping.updatedAt >= :from)
+          and (:to is null or mapping.updatedAt is null or mapping.updatedAt <= :to)
         """)
     Page<AdpMappingViewDto> findMappingViews(@Param("query") String query,
                                              @Param("mappingStatus") MappingStatus mappingStatus,
+                                             @Param("unmappedOnly") boolean unmappedOnly,
                                              @Param("reviewStatus") String reviewStatus,
                                              @Param("userId") Long userId,
                                              @Param("from") LocalDateTime from,
