@@ -1,0 +1,14 @@
+[
+  {
+    "makeId": "<MAKE_ID>",
+    "typeId": "<TYPE_ID>",
+    "name": "Corolla",
+    "nameAr": "كورولا"
+  },
+  {
+    "makeId": "<MAKE_ID>",
+    "typeId": "<TYPE_ID>",
+    "name": "Camry",
+    "nameAr": "كامري"
+  }
+]

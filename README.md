@@ -15,11 +15,27 @@ Datasource defaults can be overridden with the following environment variables:
 - `SPRING_DATASOURCE_PASSWORD`
 - `GEMINI_API_KEY`
 
-## ADP master upload samples
+## Upload samples
+Sample payloads that match each upload endpoint are available under `src/main/resources/samples/`.
+
+### ADP master upload
 The `/api/adp/master/upload` endpoint accepts either JSON (`application/json`) or CSV (`text/csv`).
-Sample payloads that match the expected schema are available under `src/main/resources/samples/`:
 
 - `adp-master.json`: JSON array of ADP master records.
 - `adp-master.csv`: CSV with headers matching the ADP master fields (e.g., `adpMakeId, makeEnDesc, adpModelId`, etc.).
 
 Both files contain two example records you can use to verify the upload functionality without crafting payloads manually.
+
+### Make bulk upload
+The `/api/makes/bulk` endpoint accepts JSON or CSV.
+
+- `make-bulk.json`: array of make objects with `name` and optional `nameAr` fields.
+- `make-bulk.csv`: CSV with a header row containing `name` and `name_ar` (Arabic name is optional).
+
+### Model bulk upload
+The `/api/models/bulk` endpoint accepts JSON or CSV and expects existing `makeId` and `typeId` values.
+
+- `model-bulk.json`: array of model payloads. Replace the `<MAKE_ID>` and `<TYPE_ID>` placeholders with actual IDs before uploading.
+- `model-bulk.csv`: CSV version with the same placeholders and headers `makeId,typeId,name,nameAr`.
+
+Both model sample files are ready to upload after substituting the IDs that exist in your environment.
