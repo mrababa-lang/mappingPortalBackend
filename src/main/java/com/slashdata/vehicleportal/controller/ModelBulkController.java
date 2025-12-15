@@ -94,7 +94,7 @@ public class ModelBulkController {
         int nameArIndex = findHeaderIndex(headers, "nameAr", "name_ar", "name_arabic");
 
         if (makeIdIndex < 0 || typeIdIndex < 0 || nameIndex < 0) {
-            return List.of();
+            return List.of(new ModelRequest());
         }
 
         List<ModelRequest> requests = new ArrayList<>();
@@ -105,6 +105,7 @@ public class ModelBulkController {
 
             String[] values = lines[i].split(",");
             if (values.length <= Math.max(makeIdIndex, Math.max(typeIdIndex, nameIndex))) {
+                requests.add(new ModelRequest());
                 continue;
             }
 
@@ -112,6 +113,7 @@ public class ModelBulkController {
             try {
                 request.setMakeId(Long.parseLong(values[makeIdIndex].trim()));
             } catch (NumberFormatException ex) {
+                requests.add(request);
                 continue;
             }
             request.setTypeId(values[typeIdIndex].trim());
