@@ -10,6 +10,7 @@ import com.slashdata.vehicleportal.dto.AdpAttributeDto;
 import com.slashdata.vehicleportal.dto.ApiResponse;
 import com.slashdata.vehicleportal.dto.BulkUploadResult;
 import com.slashdata.vehicleportal.entity.ADPMaster;
+import com.slashdata.vehicleportal.repository.ADPMappingRepository;
 import com.slashdata.vehicleportal.repository.ADPMasterRepository;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -33,6 +34,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class AdpPublicController {
 
     private final ADPMasterRepository adpMasterRepository;
+    private final ADPMappingRepository adpMappingRepository;
     private final CsvMapper csvMapper;
     private final ObjectMapper objectMapper;
 
@@ -50,8 +52,11 @@ public class AdpPublicController {
         .setColumnSeparator(',')
         .build();
 
-    public AdpPublicController(ADPMasterRepository adpMasterRepository, ObjectMapper objectMapper) {
+    public AdpPublicController(ADPMasterRepository adpMasterRepository,
+                               ADPMappingRepository adpMappingRepository,
+                               ObjectMapper objectMapper) {
         this.adpMasterRepository = adpMasterRepository;
+        this.adpMappingRepository = adpMappingRepository;
         this.objectMapper = objectMapper;
         this.csvMapper = new CsvMapper();
         this.csvMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -110,7 +115,8 @@ public class AdpPublicController {
                 "No ADP master records were uploaded.", List.of("No records were found in the upload payload."));
         }
 
-        adpMasterRepository.deleteAll();
+        adpMappingRepository.deleteAllInBatch();
+        adpMasterRepository.deleteAllInBatch();
         List<ADPMaster> saved = adpMasterRepository.saveAll(records);
         String message = String.format("Uploaded %d ADP master record(s).", saved.size());
         return new BulkUploadResult<>(saved, saved.size(), 0, message, List.of());
