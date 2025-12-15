@@ -55,12 +55,13 @@ public class ADPMappingController {
                                  @RequestParam(value = "dateTo", required = false)
                                  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
                                  Pageable pageable) {
+        boolean unmappedOnly = isUnmapped(mappingType);
         MappingStatus mappingStatus = parseMappingStatus(mappingType);
         String normalizedReviewStatus = normalizeReviewStatus(reviewStatus);
         LocalDateTime from = dateFrom != null ? dateFrom.atStartOfDay() : null;
         LocalDateTime to = dateTo != null ? dateTo.plusDays(1).atStartOfDay().minusNanos(1) : null;
 
-        Page<AdpMappingViewDto> page = adpMappingRepository.findMappingViews(query, mappingStatus,
+        Page<AdpMappingViewDto> page = adpMappingRepository.findMappingViews(query, mappingStatus, unmappedOnly,
             normalizedReviewStatus, userId, from, to, pageable);
         return ApiResponse.fromPage(page);
     }
@@ -105,7 +106,7 @@ public class ADPMappingController {
     }
 
     private MappingStatus parseMappingStatus(String mappingType) {
-        if (mappingType == null || "all".equalsIgnoreCase(mappingType)) {
+        if (mappingType == null || "all".equalsIgnoreCase(mappingType) || isUnmapped(mappingType)) {
             return null;
         }
         try {
@@ -113,6 +114,10 @@ public class ADPMappingController {
         } catch (IllegalArgumentException exception) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid mapping type value");
         }
+    }
+
+    private boolean isUnmapped(String mappingType) {
+        return mappingType != null && "unmapped".equalsIgnoreCase(mappingType);
     }
 
     private String normalizeReviewStatus(String reviewStatus) {
