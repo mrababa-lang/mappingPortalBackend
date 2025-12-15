@@ -69,6 +69,36 @@ class AdpPublicControllerTest {
             .containsExactlyInAnyOrder("TYPE1", "TYPE2");
     }
 
+    @Test
+    void uploadMasterWithWrappedJsonPayloadReplacesExistingRecords() throws Exception {
+        String payload = "{\"data\":" + readFromSample("samples/adp-master.json") + "}";
+
+        mockMvc.perform(post("/api/adp/master/upload")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(payload))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data", hasSize(2)))
+            .andExpect(jsonPath("$.data[0].adpMakeId").value("MK1"));
+
+        assertThat(adpMasterRepository.count()).isEqualTo(2);
+    }
+
+    @Test
+    void uploadMasterWithSingleJsonObjectReplacesExistingRecords() throws Exception {
+        String payload = "{\"adpMakeId\":\"MK1\",\"makeEnDesc\":\"Toyota\",\"adpModelId\":\"MDL1\"}";
+
+        mockMvc.perform(post("/api/adp/master/upload")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(payload))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data", hasSize(1)))
+            .andExpect(jsonPath("$.data[0].makeEnDesc").value("Toyota"));
+
+        assertThat(adpMasterRepository.count()).isEqualTo(1);
+        assertThat(adpMasterRepository.findAll()).extracting(ADPMaster::getAdpModelId)
+            .containsExactly("MDL1");
+    }
+
     private String readFromSample(String path) throws Exception {
         Path file = new ClassPathResource(path).getFile().toPath();
         return Files.readString(file, StandardCharsets.UTF_8);

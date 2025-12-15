@@ -1,7 +1,9 @@
 package com.slashdata.vehicleportal.controller;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.MappingIterator;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import com.slashdata.vehicleportal.dto.AdpAttributeDto;
@@ -13,12 +15,14 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
@@ -29,6 +33,7 @@ public class AdpPublicController {
 
     private final ADPMasterRepository adpMasterRepository;
     private final CsvMapper csvMapper;
+    private final ObjectMapper objectMapper;
 
     private static final CsvSchema ADP_MASTER_CSV_SCHEMA = CsvSchema.builder()
         .addColumn("adpMakeId")
@@ -44,8 +49,9 @@ public class AdpPublicController {
         .setColumnSeparator(',')
         .build();
 
-    public AdpPublicController(ADPMasterRepository adpMasterRepository) {
+    public AdpPublicController(ADPMasterRepository adpMasterRepository, ObjectMapper objectMapper) {
         this.adpMasterRepository = adpMasterRepository;
+        this.objectMapper = objectMapper;
         this.csvMapper = new CsvMapper();
         this.csvMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
@@ -60,15 +66,11 @@ public class AdpPublicController {
         return ApiResponse.of(extractDistinctAttributes(AttributeSelector.TYPE));
     }
 
-    @PostMapping(value = "/master/upload", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ApiResponse<List<ADPMaster>>> uploadMasterJson(@RequestBody List<ADPMaster> records) {
-        List<ADPMaster> saved = replaceMasters(records);
-        return ResponseEntity.ok(ApiResponse.of(saved));
-    }
-
-    @PostMapping(value = "/master/upload", consumes = "text/csv")
-    public ResponseEntity<ApiResponse<List<ADPMaster>>> uploadMasterCsv(@RequestBody String csvContent) {
-        List<ADPMaster> saved = replaceMasters(parseCsvRecords(csvContent));
+    @PostMapping(value = "/master/upload", consumes = {MediaType.APPLICATION_JSON_VALUE, "text/csv"})
+    public ResponseEntity<ApiResponse<List<ADPMaster>>> uploadMaster(@RequestBody String payload,
+                                                                     @RequestHeader(HttpHeaders.CONTENT_TYPE) String contentType)
+    {
+        List<ADPMaster> saved = replaceMasters(parsePayload(payload, contentType));
         return ResponseEntity.ok(ApiResponse.of(saved));
     }
 
@@ -104,6 +106,43 @@ public class AdpPublicController {
     private List<ADPMaster> replaceMasters(List<ADPMaster> records) {
         adpMasterRepository.deleteAll();
         return adpMasterRepository.saveAll(records != null ? records : List.of());
+    }
+
+    private List<ADPMaster> parsePayload(String payload, String contentType) {
+        if (payload == null || payload.isBlank()) {
+            return List.of();
+        }
+
+        boolean contentTypeIsCsv = contentType != null && contentType.toLowerCase().contains("text/csv");
+        String trimmedPayload = payload.trim();
+        boolean looksLikeJson = trimmedPayload.startsWith("[") || trimmedPayload.startsWith("{");
+
+        if (contentTypeIsCsv || !looksLikeJson) {
+            return parseCsvRecords(payload);
+        }
+
+        JavaType listType = objectMapper.getTypeFactory().constructCollectionType(List.class, ADPMaster.class);
+
+        try {
+            return objectMapper.readValue(trimmedPayload, listType);
+        } catch (IOException collectionEx) {
+            try {
+                JavaType wrapperType = objectMapper.getTypeFactory().constructParametricType(ApiResponse.class, listType);
+                ApiResponse<List<ADPMaster>> response = objectMapper.readValue(trimmedPayload, wrapperType);
+                if (response.getData() != null) {
+                    return response.getData();
+                }
+            } catch (IOException ignored) {
+                // Continue trying other parsing strategies
+            }
+
+            try {
+                ADPMaster record = objectMapper.readValue(trimmedPayload, ADPMaster.class);
+                return List.of(record);
+            } catch (IOException singleObjectEx) {
+                return parseCsvRecords(payload);
+            }
+        }
     }
 
     private List<ADPMaster> parseCsvRecords(String csvContent) {
