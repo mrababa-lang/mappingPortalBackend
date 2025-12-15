@@ -25,4 +25,9 @@ public class RestExceptionHandler {
         String message = "Unsupported media type. Expected: " + expected;
         return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body(ApiResponse.of(message));
     }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse<String>> handleIllegalArgument(IllegalArgumentException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.of(ex.getMessage()));
+    }
 }

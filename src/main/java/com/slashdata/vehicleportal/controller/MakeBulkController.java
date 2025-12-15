@@ -3,6 +3,7 @@ package com.slashdata.vehicleportal.controller;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.slashdata.vehicleportal.dto.ApiResponse;
+import com.slashdata.vehicleportal.dto.BulkUploadResult;
 import com.slashdata.vehicleportal.entity.Make;
 import com.slashdata.vehicleportal.service.MakeService;
 import java.io.IOException;
@@ -30,8 +31,8 @@ public class MakeBulkController {
     }
 
     @PostMapping(consumes = {MediaType.APPLICATION_JSON_VALUE, "text/csv"})
-    public ResponseEntity<ApiResponse<List<Make>>> bulkUpsert(@RequestBody String payload,
-                                                             @RequestHeader(HttpHeaders.CONTENT_TYPE) String contentType)
+    public ResponseEntity<ApiResponse<BulkUploadResult<Make>>> bulkUpsert(@RequestBody String payload,
+                                                                         @RequestHeader(HttpHeaders.CONTENT_TYPE) String contentType)
     {
         return ResponseEntity.ok(ApiResponse.of(makeService.bulkSave(parsePayload(payload, contentType))));
     }

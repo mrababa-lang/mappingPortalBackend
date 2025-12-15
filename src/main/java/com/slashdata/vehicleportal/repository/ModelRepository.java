@@ -7,4 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ModelRepository extends JpaRepository<Model, String> {
     List<Model> findByMake(Make make);
+
+    boolean existsByMakeAndNameIgnoreCase(Make make, String name);
 }

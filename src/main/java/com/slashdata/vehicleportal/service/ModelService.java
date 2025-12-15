@@ -1,5 +1,6 @@
 package com.slashdata.vehicleportal.service;
 
+import com.slashdata.vehicleportal.dto.BulkUploadResult;
 import com.slashdata.vehicleportal.dto.ModelRequest;
 import com.slashdata.vehicleportal.entity.Make;
 import com.slashdata.vehicleportal.entity.Model;
@@ -10,7 +11,11 @@ import com.slashdata.vehicleportal.repository.ModelRepository;
 import com.slashdata.vehicleportal.repository.VehicleTypeRepository;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,23 +49,49 @@ public class ModelService {
     }
 
     @Transactional
-    public List<Model> bulkCreate(List<ModelRequest> requests) {
+    public BulkUploadResult<Model> bulkCreate(List<ModelRequest> requests) {
         if (requests == null || requests.isEmpty()) {
-            return List.of();
+            return new BulkUploadResult<>(List.of(), 0, 0);
         }
+
         List<Model> models = new ArrayList<>();
+        Set<String> seenModels = new HashSet<>();
+        Map<Long, Make> makeCache = new HashMap<>();
+        Map<String, VehicleType> vehicleTypeCache = new HashMap<>();
+        int skipped = 0;
+
         for (ModelRequest request : requests) {
-            Make make = makeRepository.findById(request.getMakeId()).orElseThrow();
-            VehicleType vehicleType = vehicleTypeRepository.findById(request.getTypeId()).orElseThrow();
+            if (request == null || request.getName() == null || request.getName().trim().isEmpty()
+                || request.getMakeId() == null || request.getTypeId() == null) {
+                skipped++;
+                continue;
+            }
+
+            Make make = makeCache.computeIfAbsent(request.getMakeId(), id -> makeRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Make not found for id: " + id)));
+            VehicleType vehicleType = vehicleTypeCache.computeIfAbsent(request.getTypeId(), id -> vehicleTypeRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Vehicle type not found for id: " + id)));
+
+            String normalizedName = request.getName().trim();
+            String uniqueKey = make.getId() + "|" + normalizedName.toLowerCase();
+
+            if (seenModels.contains(uniqueKey) || modelRepository.existsByMakeAndNameIgnoreCase(make, normalizedName)) {
+                skipped++;
+                continue;
+            }
 
             Model model = new Model();
             model.setMake(make);
             model.setType(vehicleType);
-            model.setName(request.getName());
+            model.setName(normalizedName);
             model.setNameAr(request.getNameAr());
             models.add(model);
+            seenModels.add(uniqueKey);
         }
-        return modelRepository.saveAll(models);
+
+        List<Model> savedModels = models.isEmpty() ? List.of() : modelRepository.saveAll(models);
+
+        return new BulkUploadResult<>(savedModels, savedModels.size(), skipped);
     }
 
     @Transactional
