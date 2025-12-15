@@ -125,7 +125,7 @@ public class ModelBulkController {
 
     private int findHeaderIndex(String[] headers, String... candidates) {
         for (int i = 0; i < headers.length; i++) {
-            String header = headers[i].trim().toLowerCase();
+            String header = headers[i].replace("\uFEFF", "").trim().toLowerCase();
             for (String candidate : candidates) {
                 if (header.equals(candidate.toLowerCase())) {
                     return i;
