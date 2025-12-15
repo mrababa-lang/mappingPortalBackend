@@ -5,22 +5,11 @@ import jakarta.validation.constraints.NotNull;
 
 public class AdpMappingRequest {
 
-    @NotNull
-    private String adpMasterId;
-
     private Long makeId;
     private String modelId;
 
     @NotNull
     private MappingStatus status;
-
-    public String getAdpMasterId() {
-        return adpMasterId;
-    }
-
-    public void setAdpMasterId(String adpMasterId) {
-        this.adpMasterId = adpMasterId;
-    }
 
     public Long getMakeId() {
         return makeId;
