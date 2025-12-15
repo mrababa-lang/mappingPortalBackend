@@ -9,4 +9,6 @@ public interface ModelRepository extends JpaRepository<Model, String> {
     List<Model> findByMake(Make make);
 
     boolean existsByMakeAndNameIgnoreCase(Make make, String name);
+
+    boolean existsByMakeAndNameIgnoreCaseAndIdNot(Make make, String name, String id);
 }

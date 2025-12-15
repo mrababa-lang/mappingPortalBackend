@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -36,6 +37,16 @@ public class MakeController {
     public ResponseEntity<ApiResponse<Make>> create(@Valid @RequestBody Make make) {
         try {
             return ResponseEntity.ok(ApiResponse.of(makeService.create(make)));
+        } catch (DataIntegrityViolationException ex) {
+            return ResponseEntity.badRequest().body(ApiResponse.of(null));
+        }
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_ADMIN')")
+    public ResponseEntity<ApiResponse<Make>> update(@PathVariable Long id, @Valid @RequestBody Make make) {
+        try {
+            return ResponseEntity.ok(ApiResponse.of(makeService.update(id, make)));
         } catch (DataIntegrityViolationException ex) {
             return ResponseEntity.badRequest().body(ApiResponse.of(null));
         }

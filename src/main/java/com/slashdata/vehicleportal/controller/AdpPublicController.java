@@ -67,9 +67,19 @@ public class AdpPublicController {
         return ApiResponse.of(extractDistinctAttributes(AttributeSelector.MAKE));
     }
 
+    @GetMapping("/makes/map")
+    public ApiResponse<Map<String, AdpAttributeDto>> getMakesMap() {
+        return ApiResponse.of(extractDistinctAttributeMap(AttributeSelector.MAKE));
+    }
+
     @GetMapping("/types")
     public ApiResponse<List<AdpAttributeDto>> getTypes() {
         return ApiResponse.of(extractDistinctAttributes(AttributeSelector.TYPE));
+    }
+
+    @GetMapping("/types/map")
+    public ApiResponse<Map<String, AdpAttributeDto>> getTypesMap() {
+        return ApiResponse.of(extractDistinctAttributeMap(AttributeSelector.TYPE));
     }
 
     @PostMapping(value = "/master/upload", consumes = {MediaType.APPLICATION_JSON_VALUE, "text/csv"})
@@ -90,6 +100,14 @@ public class AdpPublicController {
             unique.put(key, new AdpAttributeDto(key, selector.enExtractor.apply(master), selector.arExtractor.apply(master)));
         }
         return new ArrayList<>(unique.values());
+    }
+
+    private Map<String, AdpAttributeDto> extractDistinctAttributeMap(AttributeSelector selector) {
+        Map<String, AdpAttributeDto> unique = new LinkedHashMap<>();
+        for (AdpAttributeDto attribute : extractDistinctAttributes(selector)) {
+            unique.put(attribute.getId(), attribute);
+        }
+        return unique;
     }
 
     private enum AttributeSelector {
