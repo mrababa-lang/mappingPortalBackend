@@ -16,6 +16,7 @@ import com.slashdata.vehicleportal.repository.ModelRepository;
 import com.slashdata.vehicleportal.repository.UserRepository;
 import java.time.LocalDateTime;
 import java.util.Objects;
+import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -88,6 +89,61 @@ public class AdpMappingService {
         persistHistory(saved, actor, isNew ? "CREATED" : "UPDATED");
         dashboardStatsService.recalculateDashboardAsync();
         return saved;
+    }
+
+    @Transactional
+    public void approve(String mappingId, User reviewer) {
+        if (mappingId == null || mappingId.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ADP mapping id is required");
+        }
+        ADPMapping mapping = adpMappingRepository.findById(mappingId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "ADP mapping not found"));
+        mapping.setReviewedAt(LocalDateTime.now());
+        mapping.setReviewedBy(reviewer);
+        adpMappingRepository.save(mapping);
+        persistHistory(mapping, reviewer, "REVIEWED");
+    }
+
+    @Transactional
+    public void reject(String mappingId, User actor) {
+        if (mappingId == null || mappingId.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ADP mapping id is required");
+        }
+        ADPMapping mapping = adpMappingRepository.findById(mappingId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "ADP mapping not found"));
+        persistHistory(mapping, actor, "REJECTED");
+        adpMappingRepository.delete(mapping);
+    }
+
+    @Transactional
+    public void bulkApprove(List<String> ids, User reviewer) {
+        if (ids == null || ids.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mapping ids are required");
+        }
+        List<ADPMapping> mappings = adpMappingRepository.findAllById(ids);
+        if (mappings.size() != ids.size()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "One or more ADP mappings were not found");
+        }
+        LocalDateTime now = LocalDateTime.now();
+        for (ADPMapping mapping : mappings) {
+            mapping.setReviewedAt(now);
+            mapping.setReviewedBy(reviewer);
+        }
+        adpMappingRepository.saveAll(mappings);
+        mappings.forEach(mapping -> persistHistory(mapping, reviewer, "REVIEWED"));
+    }
+
+    @Transactional
+    public void bulkReject(List<String> ids, User actor) {
+        if (ids == null || ids.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mapping ids are required");
+        }
+        List<ADPMapping> mappings = adpMappingRepository.findAllById(ids);
+        if (mappings.size() != ids.size()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "One or more ADP mappings were not found");
+        }
+        mappings.forEach(mapping -> persistHistory(mapping, actor, "REJECTED"));
+        adpMappingRepository.deleteAllById(ids);
     }
 
     public User findUser(String email) {
