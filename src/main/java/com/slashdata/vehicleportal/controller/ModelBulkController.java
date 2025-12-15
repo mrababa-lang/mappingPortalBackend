@@ -3,6 +3,7 @@ package com.slashdata.vehicleportal.controller;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.slashdata.vehicleportal.dto.ApiResponse;
+import com.slashdata.vehicleportal.dto.BulkUploadResult;
 import com.slashdata.vehicleportal.dto.ModelRequest;
 import com.slashdata.vehicleportal.entity.Model;
 import com.slashdata.vehicleportal.service.ModelService;
@@ -33,8 +34,8 @@ public class ModelBulkController {
     }
 
     @PostMapping(consumes = {MediaType.APPLICATION_JSON_VALUE, "text/csv"})
-    public ResponseEntity<ApiResponse<List<Model>>> bulkCreate(@RequestBody String payload,
-                                                               @RequestHeader(HttpHeaders.CONTENT_TYPE) String contentType)
+    public ResponseEntity<ApiResponse<BulkUploadResult<Model>>> bulkCreate(@RequestBody String payload,
+                                                                           @RequestHeader(HttpHeaders.CONTENT_TYPE) String contentType)
     {
         return ResponseEntity.ok(ApiResponse.of(modelService.bulkCreate(parsePayload(payload, contentType))));
     }
