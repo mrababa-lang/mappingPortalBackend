@@ -48,6 +48,24 @@ public class ModelService {
         return modelRepository.save(model);
     }
 
+    public Model update(String id, ModelRequest request) {
+        Model existingModel = modelRepository.findById(id).orElseThrow();
+        Make make = makeRepository.findById(request.getMakeId()).orElseThrow();
+        VehicleType vehicleType = vehicleTypeRepository.findById(request.getTypeId()).orElseThrow();
+
+        String normalizedName = request.getName();
+        if (normalizedName != null
+            && modelRepository.existsByMakeAndNameIgnoreCaseAndIdNot(make, normalizedName, id)) {
+            throw new IllegalArgumentException("Model already exists for the provided make");
+        }
+
+        existingModel.setMake(make);
+        existingModel.setType(vehicleType);
+        existingModel.setName(request.getName());
+        existingModel.setNameAr(request.getNameAr());
+        return modelRepository.save(existingModel);
+    }
+
     @Transactional
     public BulkUploadResult<Model> bulkCreate(List<ModelRequest> requests) {
         if (requests == null || requests.isEmpty()) {

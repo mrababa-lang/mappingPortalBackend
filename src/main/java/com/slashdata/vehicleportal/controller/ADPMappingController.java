@@ -87,7 +87,12 @@ public class ADPMappingController {
     @PostMapping("/{adpId}/approve")
     @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_ADMIN')")
     public ResponseEntity<Void> approve(@PathVariable String adpId, Principal principal) {
-        ADPMapping mapping = adpMappingRepository.findById(adpId).orElseThrow();
+        if (adpId == null || adpId.isBlank() || "undefined".equalsIgnoreCase(adpId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ADP mapping id is required");
+        }
+
+        ADPMapping mapping = adpMappingRepository.findById(adpId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "ADP mapping not found"));
         mapping.setReviewedAt(LocalDateTime.now());
         mapping.setReviewedBy(null);
         if (principal != null) {
@@ -100,6 +105,12 @@ public class ADPMappingController {
     @DeleteMapping("/{adpId}/reject")
     @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_ADMIN')")
     public ResponseEntity<Void> reject(@PathVariable String adpId) {
+        if (adpId == null || adpId.isBlank() || "undefined".equalsIgnoreCase(adpId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ADP mapping id is required");
+        }
+        if (!adpMappingRepository.existsById(adpId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "ADP mapping not found");
+        }
         adpMappingRepository.deleteById(adpId);
         return ResponseEntity.noContent().build();
     }

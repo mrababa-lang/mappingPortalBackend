@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -41,6 +42,16 @@ public class ModelController {
         try {
             return ResponseEntity.ok(ApiResponse.of(modelService.create(request)));
         } catch (DataIntegrityViolationException ex) {
+            return ResponseEntity.badRequest().body(ApiResponse.of(null));
+        }
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_ADMIN')")
+    public ResponseEntity<ApiResponse<Model>> update(@PathVariable String id, @Valid @RequestBody ModelRequest request) {
+        try {
+            return ResponseEntity.ok(ApiResponse.of(modelService.update(id, request)));
+        } catch (DataIntegrityViolationException | IllegalArgumentException ex) {
             return ResponseEntity.badRequest().body(ApiResponse.of(null));
         }
     }

@@ -35,6 +35,18 @@ public class MakeService {
         return makeRepository.save(make);
     }
 
+    public Make update(Long id, Make updatedMake) {
+        Make existingMake = makeRepository.findById(id).orElseThrow();
+        String normalizedName = updatedMake.getName();
+        if (normalizedName != null && makeRepository.existsByNameIgnoreCaseAndIdNot(normalizedName, id)) {
+            throw new DataIntegrityViolationException("Make name already exists");
+        }
+
+        existingMake.setName(updatedMake.getName());
+        existingMake.setNameAr(updatedMake.getNameAr());
+        return makeRepository.save(existingMake);
+    }
+
     public List<Make> findAll() {
         return makeRepository.findAll();
     }
