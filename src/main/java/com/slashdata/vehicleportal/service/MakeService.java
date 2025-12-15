@@ -42,16 +42,20 @@ public class MakeService {
     @Transactional
     public BulkUploadResult<Make> bulkSave(List<Make> makes) {
         if (makes == null || makes.isEmpty()) {
-            return new BulkUploadResult<>(List.of(), 0, 0);
+            return new BulkUploadResult<>(List.of(), 0, 0,
+                "No makes were uploaded because the payload was empty.", List.of("No make records were provided."));
         }
 
         List<Make> makesToSave = new ArrayList<>();
         Set<String> seenNames = new HashSet<>();
         int skipped = 0;
+        int duplicateNames = 0;
+        int invalidNames = 0;
 
         for (Make make : makes) {
             if (make == null || make.getName() == null || make.getName().trim().isEmpty()) {
                 skipped++;
+                invalidNames++;
                 continue;
             }
 
@@ -60,6 +64,7 @@ public class MakeService {
 
             if (seenNames.contains(normalizedKey) || makeRepository.existsByNameIgnoreCase(normalizedName)) {
                 skipped++;
+                duplicateNames++;
                 continue;
             }
 
@@ -72,7 +77,28 @@ public class MakeService {
 
         List<Make> savedMakes = makesToSave.isEmpty() ? List.of() : makeRepository.saveAll(makesToSave);
 
-        return new BulkUploadResult<>(savedMakes, savedMakes.size(), skipped);
+        List<String> reasons = new ArrayList<>();
+        if (duplicateNames > 0) {
+            reasons.add(String.format("%d record(s) skipped because the make name already exists.", duplicateNames));
+        }
+        if (invalidNames > 0) {
+            reasons.add(String.format("%d record(s) skipped because the make name was missing.", invalidNames));
+        }
+
+        String message;
+        if (savedMakes.isEmpty()) {
+            message = "No makes were uploaded.";
+            if (!reasons.isEmpty()) {
+                message += " All records were skipped.";
+            }
+        } else {
+            message = String.format("Uploaded %d make(s).", savedMakes.size());
+            if (skipped > 0) {
+                message += String.format(" %d record(s) were skipped.", skipped);
+            }
+        }
+
+        return new BulkUploadResult<>(savedMakes, savedMakes.size(), skipped, message, reasons);
     }
 
     @Transactional

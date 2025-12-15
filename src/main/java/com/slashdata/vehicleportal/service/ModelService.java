@@ -51,7 +51,8 @@ public class ModelService {
     @Transactional
     public BulkUploadResult<Model> bulkCreate(List<ModelRequest> requests) {
         if (requests == null || requests.isEmpty()) {
-            return new BulkUploadResult<>(List.of(), 0, 0);
+            return new BulkUploadResult<>(List.of(), 0, 0,
+                "No models were uploaded because the payload was empty.", List.of("No model records were provided."));
         }
 
         List<Model> models = new ArrayList<>();
@@ -59,11 +60,14 @@ public class ModelService {
         Map<Long, Make> makeCache = new HashMap<>();
         Map<String, VehicleType> vehicleTypeCache = new HashMap<>();
         int skipped = 0;
+        int missingFields = 0;
+        int duplicateModels = 0;
 
         for (ModelRequest request : requests) {
             if (request == null || request.getName() == null || request.getName().trim().isEmpty()
                 || request.getMakeId() == null || request.getTypeId() == null) {
                 skipped++;
+                missingFields++;
                 continue;
             }
 
@@ -77,6 +81,7 @@ public class ModelService {
 
             if (seenModels.contains(uniqueKey) || modelRepository.existsByMakeAndNameIgnoreCase(make, normalizedName)) {
                 skipped++;
+                duplicateModels++;
                 continue;
             }
 
@@ -91,7 +96,28 @@ public class ModelService {
 
         List<Model> savedModels = models.isEmpty() ? List.of() : modelRepository.saveAll(models);
 
-        return new BulkUploadResult<>(savedModels, savedModels.size(), skipped);
+        List<String> reasons = new ArrayList<>();
+        if (duplicateModels > 0) {
+            reasons.add(String.format("%d record(s) skipped because the model already exists for the make.", duplicateModels));
+        }
+        if (missingFields > 0) {
+            reasons.add(String.format("%d record(s) skipped because required fields were missing.", missingFields));
+        }
+
+        String message;
+        if (savedModels.isEmpty()) {
+            message = "No models were uploaded.";
+            if (!reasons.isEmpty()) {
+                message += " All records were skipped.";
+            }
+        } else {
+            message = String.format("Uploaded %d model(s).", savedModels.size());
+            if (skipped > 0) {
+                message += String.format(" %d record(s) were skipped.", skipped);
+            }
+        }
+
+        return new BulkUploadResult<>(savedModels, savedModels.size(), skipped, message, reasons);
     }
 
     @Transactional
