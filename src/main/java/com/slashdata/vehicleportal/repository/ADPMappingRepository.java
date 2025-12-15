@@ -1,7 +1,9 @@
 package com.slashdata.vehicleportal.repository;
 
 import com.slashdata.vehicleportal.entity.ADPMapping;
+import com.slashdata.vehicleportal.dto.AdpMappingViewDto;
 import com.slashdata.vehicleportal.entity.MappingStatus;
+import com.slashdata.vehicleportal.entity.User;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -11,6 +13,8 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface ADPMappingRepository extends JpaRepository<ADPMapping, String>, JpaSpecificationExecutor<ADPMapping> {
 
@@ -19,6 +23,50 @@ public interface ADPMappingRepository extends JpaRepository<ADPMapping, String>,
     long countByStatus(MappingStatus status);
 
     List<ADPMapping> findTop10ByOrderByUpdatedAtDesc();
+
+    @Query("""
+        select new com.slashdata.vehicleportal.dto.AdpMappingViewDto(
+            master.id,
+            master.makeEnDesc,
+            master.modelEnDesc,
+            master.typeEnDesc,
+            mapping.status,
+            make.id,
+            make.name,
+            model.id,
+            model.name,
+            updater.id,
+            updater.fullName,
+            mapping.updatedAt,
+            mapping.reviewedAt,
+            reviewer.id,
+            reviewer.fullName
+        )
+        from ADPMapping mapping
+        join mapping.adpMaster master
+        left join mapping.make make
+        left join mapping.model model
+        left join mapping.updatedBy updater
+        left join mapping.reviewedBy reviewer
+        where (:query is null or lower(master.makeEnDesc) like lower(concat('%', :query, '%'))
+            or lower(master.modelEnDesc) like lower(concat('%', :query, '%')))
+          and (:mappingStatus is null or mapping.status = :mappingStatus)
+          and (
+              :reviewStatus = 'all'
+              or (:reviewStatus = 'pending' and mapping.reviewedAt is null)
+              or (:reviewStatus = 'reviewed' and mapping.reviewedAt is not null)
+          )
+          and (:userId is null or mapping.updatedBy.id = :userId)
+          and (:from is null or mapping.updatedAt >= :from)
+          and (:to is null or mapping.updatedAt <= :to)
+        """)
+    Page<AdpMappingViewDto> findMappingViews(@Param("query") String query,
+                                             @Param("mappingStatus") MappingStatus mappingStatus,
+                                             @Param("reviewStatus") String reviewStatus,
+                                             @Param("userId") Long userId,
+                                             @Param("from") LocalDateTime from,
+                                             @Param("to") LocalDateTime to,
+                                             Pageable pageable);
 
     @Transactional
     @Modifying
@@ -32,8 +80,8 @@ public interface ADPMappingRepository extends JpaRepository<ADPMapping, String>,
 
     @Transactional
     @Modifying
-    @Query("update ADPMapping m set m.reviewedAt = CURRENT_TIMESTAMP, m.reviewedBy = :reviewer where m.id in :ids and m.reviewedAt is null")
-    int approveAll(@Param("ids") Iterable<String> ids, @Param("reviewer") String reviewer);
+    @Query("update ADPMapping m set m.reviewedAt = CURRENT_TIMESTAMP, m.reviewedBy = :reviewer where m.id in :ids")
+    int approveAll(@Param("ids") Iterable<String> ids, @Param("reviewer") User reviewer);
 
     @Transactional
     @Modifying

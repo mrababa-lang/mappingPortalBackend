@@ -2,7 +2,8 @@ package com.slashdata.vehicleportal.controller;
 
 import com.slashdata.vehicleportal.dto.ApiResponse;
 import com.slashdata.vehicleportal.dto.BulkActionRequest;
-import com.slashdata.vehicleportal.repository.ADPMappingRepository;
+import com.slashdata.vehicleportal.entity.User;
+import com.slashdata.vehicleportal.service.AdpMappingService;
 import java.security.Principal;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -10,25 +11,27 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 @RestController
 @RequestMapping("/api/adp/mappings/bulk-action")
 @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_ADMIN')")
 public class ADPMappingBulkController {
 
-    private final ADPMappingRepository adpMappingRepository;
+    private final AdpMappingService adpMappingService;
 
-    public ADPMappingBulkController(ADPMappingRepository adpMappingRepository) {
-        this.adpMappingRepository = adpMappingRepository;
+    public ADPMappingBulkController(AdpMappingService adpMappingService) {
+        this.adpMappingService = adpMappingService;
     }
 
     @PostMapping
     public ResponseEntity<ApiResponse<String>> bulk(@RequestBody BulkActionRequest request, Principal principal) {
+        User actor = adpMappingService.findUser(principal != null ? principal.getName() : null);
         switch (request.getAction()) {
-            case APPROVE -> adpMappingRepository.approveAll(request.getIds(), principal != null ? principal.getName() : "system");
-            case REJECT -> adpMappingRepository.deleteAllByIds(request.getIds());
-            default -> {
-            }
+            case APPROVE -> adpMappingService.bulkApprove(request.getIds(), actor);
+            case REJECT -> adpMappingService.bulkReject(request.getIds(), actor);
+            default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported bulk action");
         }
         return ResponseEntity.ok(ApiResponse.of("OK"));
     }

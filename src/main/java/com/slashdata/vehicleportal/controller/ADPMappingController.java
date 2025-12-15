@@ -6,8 +6,8 @@ import com.slashdata.vehicleportal.dto.ApiResponse;
 import com.slashdata.vehicleportal.entity.ADPMapping;
 import com.slashdata.vehicleportal.entity.MappingStatus;
 import com.slashdata.vehicleportal.entity.User;
+import java.time.LocalDate;
 import com.slashdata.vehicleportal.repository.ADPMappingRepository;
-import com.slashdata.vehicleportal.repository.ADPMasterRepository;
 import com.slashdata.vehicleportal.service.AdpMappingService;
 import com.slashdata.vehicleportal.specification.ADPMappingSpecifications;
 import jakarta.validation.Valid;
@@ -19,6 +19,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -36,35 +37,31 @@ import org.springframework.web.server.ResponseStatusException;
 public class ADPMappingController {
 
     private final ADPMappingRepository adpMappingRepository;
-    private final ADPMasterRepository adpMasterRepository;
     private final AdpMappingService adpMappingService;
 
-    public ADPMappingController(ADPMappingRepository adpMappingRepository, ADPMasterRepository adpMasterRepository,
-                                AdpMappingService adpMappingService) {
+    public ADPMappingController(ADPMappingRepository adpMappingRepository, AdpMappingService adpMappingService) {
         this.adpMappingRepository = adpMappingRepository;
-        this.adpMasterRepository = adpMasterRepository;
         this.adpMappingService = adpMappingService;
     }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_USER', 'MAPPING_ADMIN')")
     public ApiResponse<?> search(@RequestParam(value = "q", required = false) String query,
-                                 @RequestParam(value = "status", required = false) String status,
+                                 @RequestParam(value = "reviewStatus", required = false, defaultValue = "all") String reviewStatus,
+                                 @RequestParam(value = "mappingType", required = false, defaultValue = "all") String mappingType,
                                  @RequestParam(value = "userId", required = false) Long userId,
+                                 @RequestParam(value = "dateFrom", required = false)
+                                 @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
+                                 @RequestParam(value = "dateTo", required = false)
+                                 @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
                                  Pageable pageable) {
-        String normalizedStatus = status != null ? status.toUpperCase() : null;
-        boolean unmappedOnly = "UNMAPPED".equals(normalizedStatus);
-        MappingStatus mappingStatus = null;
-        if (normalizedStatus != null && !unmappedOnly) {
-            try {
-                mappingStatus = MappingStatus.valueOf(normalizedStatus);
-            } catch (IllegalArgumentException exception) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid status value");
-            }
-        }
+        MappingStatus mappingStatus = parseMappingStatus(mappingType);
+        String normalizedReviewStatus = normalizeReviewStatus(reviewStatus);
+        LocalDateTime from = dateFrom != null ? dateFrom.atStartOfDay() : null;
+        LocalDateTime to = dateTo != null ? dateTo.plusDays(1).atStartOfDay().minusNanos(1) : null;
 
-        Page<AdpMappingViewDto> page = adpMasterRepository.findMappingViews(query, mappingStatus, unmappedOnly, userId,
-            pageable);
+        Page<AdpMappingViewDto> page = adpMappingRepository.findMappingViews(query, mappingStatus,
+            normalizedReviewStatus, userId, from, to, pageable);
         return ApiResponse.fromPage(page);
     }
 
@@ -91,27 +88,41 @@ public class ADPMappingController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ADP mapping id is required");
         }
 
-        ADPMapping mapping = adpMappingRepository.findById(adpId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "ADP mapping not found"));
-        mapping.setReviewedAt(LocalDateTime.now());
-        mapping.setReviewedBy(null);
-        if (principal != null) {
-            mapping.setReviewedBy(adpMappingService.findUser(principal.getName()));
-        }
-        adpMappingRepository.save(mapping);
+        User reviewer = adpMappingService.findUser(principal != null ? principal.getName() : null);
+        adpMappingService.approve(adpId, reviewer);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{adpId}/reject")
     @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_ADMIN')")
-    public ResponseEntity<Void> reject(@PathVariable String adpId) {
+    public ResponseEntity<Void> reject(@PathVariable String adpId, Principal principal) {
         if (adpId == null || adpId.isBlank() || "undefined".equalsIgnoreCase(adpId)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ADP mapping id is required");
         }
-        if (!adpMappingRepository.existsById(adpId)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "ADP mapping not found");
+        User actor = adpMappingService.findUser(principal != null ? principal.getName() : null);
+        adpMappingService.reject(adpId, actor);
+        return ResponseEntity.ok().build();
+    }
+
+    private MappingStatus parseMappingStatus(String mappingType) {
+        if (mappingType == null || "all".equalsIgnoreCase(mappingType)) {
+            return null;
         }
-        adpMappingRepository.deleteById(adpId);
-        return ResponseEntity.noContent().build();
+        try {
+            return MappingStatus.valueOf(mappingType.toUpperCase());
+        } catch (IllegalArgumentException exception) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid mapping type value");
+        }
+    }
+
+    private String normalizeReviewStatus(String reviewStatus) {
+        if (reviewStatus == null) {
+            return "all";
+        }
+        String normalized = reviewStatus.toLowerCase();
+        if (!normalized.equals("pending") && !normalized.equals("reviewed") && !normalized.equals("all")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid review status value");
+        }
+        return normalized;
     }
 }
