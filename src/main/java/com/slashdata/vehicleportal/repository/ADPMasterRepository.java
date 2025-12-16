@@ -3,6 +3,7 @@ package com.slashdata.vehicleportal.repository;
 import com.slashdata.vehicleportal.dto.UniqueAdpMakeView;
 import com.slashdata.vehicleportal.dto.UniqueAdpTypeView;
 import com.slashdata.vehicleportal.entity.ADPMaster;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,6 +14,8 @@ import org.springframework.data.repository.query.Param;
 
 public interface ADPMasterRepository extends JpaRepository<ADPMaster, String>, JpaSpecificationExecutor<ADPMaster> {
     Optional<ADPMaster> findByAdpMakeId(String adpMakeId);
+
+    List<ADPMaster> findAllByAdpMakeId(String adpMakeId);
 
     @Query(value = """
         SELECT am.adp_make_id AS adpMakeId,

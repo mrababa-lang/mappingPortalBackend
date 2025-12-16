@@ -20,6 +20,8 @@ public interface ADPMappingRepository extends JpaRepository<ADPMapping, String>,
 
     Optional<ADPMapping> findByAdpMasterId(String adpMasterId);
 
+    List<ADPMapping> findByAdpMaster_IdIn(Iterable<String> adpMasterIds);
+
     long countByStatus(MappingStatus status);
 
     List<ADPMapping> findTop10ByOrderByUpdatedAtDesc();

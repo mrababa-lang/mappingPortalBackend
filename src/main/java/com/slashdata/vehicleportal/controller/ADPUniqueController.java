@@ -12,6 +12,7 @@ import com.slashdata.vehicleportal.repository.ADPMasterRepository;
 import com.slashdata.vehicleportal.repository.ADPTypeMappingRepository;
 import com.slashdata.vehicleportal.repository.MakeRepository;
 import com.slashdata.vehicleportal.repository.VehicleTypeRepository;
+import com.slashdata.vehicleportal.service.AdpMappingService;
 import jakarta.validation.Valid;
 import java.time.LocalDateTime;
 import org.springframework.data.domain.Pageable;
@@ -35,17 +36,20 @@ public class ADPUniqueController {
     private final ADPTypeMappingRepository adpTypeMappingRepository;
     private final MakeRepository makeRepository;
     private final VehicleTypeRepository vehicleTypeRepository;
+    private final AdpMappingService adpMappingService;
 
     public ADPUniqueController(ADPMasterRepository adpMasterRepository,
                                ADPMakeMappingRepository adpMakeMappingRepository,
                                ADPTypeMappingRepository adpTypeMappingRepository,
                                MakeRepository makeRepository,
-                               VehicleTypeRepository vehicleTypeRepository) {
+                               VehicleTypeRepository vehicleTypeRepository,
+                               AdpMappingService adpMappingService) {
         this.adpMasterRepository = adpMasterRepository;
         this.adpMakeMappingRepository = adpMakeMappingRepository;
         this.adpTypeMappingRepository = adpTypeMappingRepository;
         this.makeRepository = makeRepository;
         this.vehicleTypeRepository = vehicleTypeRepository;
+        this.adpMappingService = adpMappingService;
     }
 
     @GetMapping("/makes")
@@ -65,7 +69,10 @@ public class ADPUniqueController {
         mapping.setSdMake(sdMake);
         mapping.setUpdatedAt(LocalDateTime.now());
 
-        return ApiResponse.of(adpMakeMappingRepository.save(mapping));
+        ADPMakeMapping saved = adpMakeMappingRepository.save(mapping);
+        adpMappingService.createMissingModelMappingsForMake(request.getAdpMakeId(), sdMake);
+
+        return ApiResponse.of(saved);
     }
 
     @GetMapping("/types")
