@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/types")
-@PreAuthorize("isAuthenticated()")
 public class VehicleTypeController {
 
     private final VehicleTypeRepository vehicleTypeRepository;

@@ -50,6 +50,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/health/**").permitAll()
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/models/**", "/api/makes/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/types/**").permitAll()
                 .requestMatchers("/api/makes/bulk", "/api/makes/bulk/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/makes/bulk", "/api/makes/bulk/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/adp/master/upload").permitAll()
