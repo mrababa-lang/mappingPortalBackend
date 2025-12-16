@@ -37,6 +37,7 @@ public class VehicleTypeController {
         if (vehicleTypeRepository.existsByNameIgnoreCase(vehicleType.getName())) {
             return ResponseEntity.badRequest().body(ApiResponse.of(null));
         }
+        vehicleType.setId(null);
         return ResponseEntity.ok(ApiResponse.of(vehicleTypeRepository.save(vehicleType)));
     }
 
