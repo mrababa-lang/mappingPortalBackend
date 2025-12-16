@@ -8,7 +8,6 @@ import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import com.slashdata.vehicleportal.dto.AdpAttributeDto;
 import com.slashdata.vehicleportal.dto.ApiResponse;
-import com.slashdata.vehicleportal.dto.BulkUploadResult;
 import com.slashdata.vehicleportal.entity.ADPMaster;
 import com.slashdata.vehicleportal.repository.ADPMappingRepository;
 import com.slashdata.vehicleportal.repository.ADPMasterRepository;
@@ -83,11 +82,11 @@ public class AdpPublicController {
     }
 
     @PostMapping(value = "/master/upload", consumes = {MediaType.APPLICATION_JSON_VALUE, "text/csv"})
-    public ResponseEntity<ApiResponse<BulkUploadResult<ADPMaster>>> uploadMaster(@RequestBody String payload,
-                                                                                @RequestHeader(HttpHeaders.CONTENT_TYPE) String contentType)
+    public ResponseEntity<ApiResponse<List<ADPMaster>>> uploadMaster(@RequestBody String payload,
+                                                                     @RequestHeader(HttpHeaders.CONTENT_TYPE) String contentType)
     {
-        BulkUploadResult<ADPMaster> result = replaceMasters(parsePayload(payload, contentType));
-        return ResponseEntity.ok(ApiResponse.of(result));
+        List<ADPMaster> records = replaceMasters(parsePayload(payload, contentType));
+        return ResponseEntity.ok(ApiResponse.of(records));
     }
 
     private List<AdpAttributeDto> extractDistinctAttributes(AttributeSelector selector) {
@@ -127,17 +126,14 @@ public class AdpPublicController {
         }
     }
 
-    private BulkUploadResult<ADPMaster> replaceMasters(List<ADPMaster> records) {
+    private List<ADPMaster> replaceMasters(List<ADPMaster> records) {
         if (records == null || records.isEmpty()) {
-            return new BulkUploadResult<>(List.of(), 0, 0,
-                "No ADP master records were uploaded.", List.of("No records were found in the upload payload."));
+            return List.of();
         }
 
         adpMappingRepository.deleteAllInBatch();
         adpMasterRepository.deleteAllInBatch();
-        List<ADPMaster> saved = adpMasterRepository.saveAll(records);
-        String message = String.format("Uploaded %d ADP master record(s).", saved.size());
-        return new BulkUploadResult<>(saved, saved.size(), 0, message, List.of());
+        return adpMasterRepository.saveAll(records);
     }
 
     private List<ADPMaster> parsePayload(String payload, String contentType) {
