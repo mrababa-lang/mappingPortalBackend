@@ -8,7 +8,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import java.time.LocalDateTime;
 
+import org.springframework.context.annotation.Profile;
+
 @Component
+@Profile("!test")
 public class DataInitializer implements CommandLineRunner {
 
     private final UserRepository userRepository;
