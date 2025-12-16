@@ -58,7 +58,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/adp/master/upload").permitAll()
                 .requestMatchers("/api/adp/**").permitAll()
                 .anyRequest().authenticated())
-            .addFilterBefore(apiLoggingFilter, JwtAuthenticationFilter.class)
+            .addFilterBefore(apiLoggingFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
