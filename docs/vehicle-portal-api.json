@@ -1,0 +1,490 @@
+{
+  "description": "Vehicle Portal - API Specification per View",
+  "format": "JSON",
+  "auth": "All endpoints (except Login) require Header: Authorization: Bearer <token>",
+  "views": [
+    {
+      "name": "Login",
+      "component": "Login.tsx",
+      "endpoints": [
+        {
+          "title": "Authenticate User",
+          "method": "POST",
+          "path": "/api/auth/login",
+          "purpose": "Validate credentials and issue JWT.",
+          "requestBody": {
+            "email": "admin@slashdata.ae",
+            "password": "password123"
+          },
+          "responses": {
+            "200": {
+              "token": "eyJhbGciOiJIUzI1...",
+              "user": {
+                "id": "1",
+                "fullName": "Admin User",
+                "email": "admin@slashdata.ae",
+                "role": "ADMIN",
+                "status": "ACTIVE"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "component": "Dashboard.tsx",
+      "endpoints": [
+        {
+          "title": "Get Dashboard Stats",
+          "method": "GET",
+          "path": "/api/stats/dashboard",
+          "purpose": "Counters for KPI cards and charts.",
+          "responses": {
+            "200": {
+              "totalMakes": 120,
+              "totalModels": 850,
+              "totalTypes": 15,
+              "mappedCount": 5000,
+              "unmappedCount": 200,
+              "missingModelCount": 50,
+              "missingMakeCount": 10,
+              "localizationScore": 85
+            }
+          }
+        },
+        {
+          "title": "Get Activity Trend",
+          "method": "GET",
+          "path": "/api/dashboard/trends",
+          "purpose": "Line chart data for mapping activity over time.",
+          "requestParams": ["from (YYYY-MM-DD)", "to (YYYY-MM-DD)"],
+          "responses": {
+            "200": [
+              { "date": "2023-10-01", "count": 15 },
+              { "date": "2023-10-02", "count": 42 }
+            ]
+          }
+        },
+        {
+          "title": "Get Recent Activity",
+          "method": "GET",
+          "path": "/api/dashboard/activity",
+          "purpose": "List of recent system actions.",
+          "responses": {
+            "200": [
+              {
+                "id": 1,
+                "user": "John Doe",
+                "action": "UPDATED",
+                "details": "Mapped TOY-CAM to Toyota Camry",
+                "timestamp": "2023-10-25T14:30:00Z"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Vehicle Makes",
+      "component": "Makes.tsx",
+      "endpoints": [
+        {
+          "title": "List Makes",
+          "method": "GET",
+          "path": "/api/makes",
+          "responses": {
+            "200": [
+              { "id": "TOY", "name": "Toyota", "nameAr": "..." }
+            ]
+          }
+        },
+        {
+          "title": "Create Make (Manual ID)",
+          "method": "POST",
+          "path": "/api/makes",
+          "requestBody": { "id": "TOY", "name": "Toyota", "nameAr": "تويوتا" }
+        },
+        {
+          "title": "Update Make",
+          "method": "PUT",
+          "path": "/api/makes/{id}",
+          "requestBody": { "id": "TOY", "name": "Toyota Updated", "nameAr": "تويوتا" }
+        },
+        {
+          "title": "Delete Make",
+          "method": "DELETE",
+          "path": "/api/makes/{id}"
+        },
+        {
+          "title": "Bulk Import",
+          "method": "POST",
+          "path": "/api/makes/bulk",
+          "headers": { "Content-Type": "multipart/form-data (or application/json if parsed client-side)" },
+          "requestBody": "File (.csv) or JSON Array",
+          "responses": {
+            "200": { "recordsAdded": 10, "recordsSkipped": 2, "message": "Success" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Vehicle Models",
+      "component": "Models.tsx",
+      "endpoints": [
+        {
+          "title": "List Models",
+          "method": "GET",
+          "path": "/api/models",
+          "responses": {
+            "200": [
+              {
+                "id": "CAMRY",
+                "makeId": "TOY",
+                "typeId": "SEDAN",
+                "name": "Camry",
+                "nameAr": "كامري"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Create Model",
+          "method": "POST",
+          "path": "/api/models",
+          "requestBody": {
+            "id": "CAMRY",
+            "makeId": "TOY",
+            "typeId": "SEDAN",
+            "name": "Camry",
+            "nameAr": "..."
+          }
+        },
+        {
+          "title": "Update Model",
+          "method": "PUT",
+          "path": "/api/models/{id}",
+          "requestBody": {
+            "id": "CAMRY",
+            "makeId": "TOY",
+            "typeId": "SEDAN",
+            "name": "Camry",
+            "nameAr": "..."
+          }
+        },
+        {
+          "title": "Delete Model",
+          "method": "DELETE",
+          "path": "/api/models/{id}"
+        },
+        {
+          "title": "Bulk Import",
+          "method": "POST",
+          "path": "/api/models/bulk"
+        }
+      ]
+    },
+    {
+      "name": "Vehicle Types",
+      "component": "Types.tsx",
+      "endpoints": [
+        {
+          "title": "List Types",
+          "method": "GET",
+          "path": "/api/types",
+          "responses": {
+            "200": [
+              { "id": "SUV", "name": "Sports Utility Vehicle", "description": "..." }
+            ]
+          }
+        },
+        {
+          "title": "Create Type",
+          "method": "POST",
+          "path": "/api/types",
+          "requestBody": { "id": "SUV", "name": "Sports Utility Vehicle", "description": "..." }
+        },
+        {
+          "title": "Update Type",
+          "method": "PUT",
+          "path": "/api/types/{id}",
+          "requestBody": { "id": "SUV", "name": "Sports Utility Vehicle", "description": "Updated description" }
+        },
+        {
+          "title": "Delete Type",
+          "method": "DELETE",
+          "path": "/api/types/{id}"
+        }
+      ]
+    },
+    {
+      "name": "ADP Master",
+      "component": "ADPMaster.tsx",
+      "endpoints": [
+        {
+          "title": "Get Master Data (Paginated)",
+          "method": "GET",
+          "path": "/api/adp/master",
+          "requestParams": ["page (0-based)", "size", "q (optional search)"],
+          "responses": {
+            "200": {
+              "content": [
+                {
+                  "id": "RAW-123",
+                  "adpMakeId": "TOY",
+                  "makeEnDesc": "TOYOTA",
+                  "adpModelId": "CAM",
+                  "modelEnDesc": "CAMRY",
+                  "typeEnDesc": "SEDAN"
+                }
+              ],
+              "totalPages": 5,
+              "totalElements": 100
+            }
+          }
+        },
+        {
+          "title": "Bulk Upload ADP Master",
+          "method": "POST",
+          "path": "/api/adp/master/upload",
+          "requestBody": "CSV File / JSON Array"
+        }
+      ]
+    },
+    {
+      "name": "ADP Mapping",
+      "component": "ADPMapping.tsx",
+      "endpoints": [
+        {
+          "title": "Get Mappings (Filtered)",
+          "method": "GET",
+          "path": "/api/adp/mappings",
+          "requestParams": [
+            "page",
+            "size",
+            "status (MAPPED | MISSING_MAKE | MISSING_MODEL | UNMAPPED)",
+            "dateFrom",
+            "dateTo",
+            "q"
+          ],
+          "responses": {
+            "200": {
+              "content": [
+                {
+                  "adpId": "RAW-123",
+                  "makeEnDesc": "TOYOTA",
+                  "modelEnDesc": "CAMRY",
+                  "status": "MAPPED",
+                  "sdMakeId": "TOY",
+                  "sdMakeName": "Toyota",
+                  "sdModelId": "CAMRY",
+                  "sdModelName": "Camry",
+                  "updatedBy": "1",
+                  "updatedAt": "..."
+                }
+              ],
+              "page": 0,
+              "size": 20,
+              "totalPages": 5,
+              "totalElements": 100
+            }
+          }
+        },
+        {
+          "title": "Upsert Mapping",
+          "method": "PUT",
+          "path": "/api/adp/mappings/{adpId}",
+          "requestBody": {
+            "status": "MAPPED",
+            "makeId": "TOY",
+            "modelId": "CAMRY",
+            "note": "modelId is optional when status is MISSING_MODEL"
+          }
+        },
+        {
+          "title": "AI Suggestion",
+          "method": "POST",
+          "path": "/api/ai/suggest-mapping",
+          "requestBody": { "description": "TOYOTA CAMRY 2023 SEDAN" },
+          "responses": {
+            "200": { "make": "Toyota", "model": "Camry" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ADP Makes - Unique",
+      "component": "ADPMakes.tsx",
+      "endpoints": [
+        {
+          "title": "Get Unique ADP Makes",
+          "method": "GET",
+          "path": "/api/adp/makes",
+          "responses": {
+            "200": {
+              "content": [
+                {
+                  "adpMakeId": "TOY-RAW",
+                  "adpMakeName": "TOYOTA",
+                  "sdMakeId": "TOY",
+                  "sdMakeName": "Toyota"
+                }
+              ],
+              "totalPages": 3,
+              "totalElements": 42
+            }
+          }
+        },
+        {
+          "title": "Map ADP Make (Global Rule)",
+          "method": "POST",
+          "path": "/api/adp/makes/map",
+          "requestBody": {
+            "adpMakeId": "TOY-RAW",
+            "sdMakeId": "TOY"
+          },
+          "purpose": "Creates a rule and propagates it to all unmapped records."
+        }
+      ]
+    },
+    {
+      "name": "ADP Types - Unique",
+      "component": "ADPVehicleTypes.tsx",
+      "endpoints": [
+        {
+          "title": "Get Unique ADP Types",
+          "method": "GET",
+          "path": "/api/adp/types",
+          "responses": {
+            "200": {
+              "content": [
+                { "adpTypeId": "SUV-RAW", "adpTypeName": "SUV", "sdTypeId": "SUV", "sdTypeName": "Sports Utility Vehicle" }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Map ADP Type",
+          "method": "POST",
+          "path": "/api/adp/types/map",
+          "requestBody": { "adpTypeId": "SUV-RAW", "sdTypeId": "SUV" }
+        }
+      ]
+    },
+    {
+      "name": "Mapping Review",
+      "component": "MappingReview.tsx",
+      "endpoints": [
+        {
+          "title": "Get Pending Reviews",
+          "method": "GET",
+          "path": "/api/adp/mappings",
+          "requestParams": ["reviewStatus=pending", "page", "size"]
+        },
+        {
+          "title": "Approve Mapping",
+          "method": "POST",
+          "path": "/api/adp/mappings/{id}/approve",
+          "responses": { "200": "OK" }
+        },
+        {
+          "title": "Reject Mapping",
+          "method": "DELETE",
+          "path": "/api/adp/mappings/{id}/reject",
+          "responses": { "200": "OK" }
+        },
+        {
+          "title": "Bulk Action",
+          "method": "POST",
+          "path": "/api/adp/mappings/bulk-action",
+          "requestBody": {
+            "action": "APPROVE",
+            "ids": ["RAW-123", "RAW-456"]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "component": "Users.tsx",
+      "endpoints": [
+        {
+          "title": "List Users",
+          "method": "GET",
+          "path": "/api/users",
+          "responses": {
+            "200": [
+              { "id": 1, "fullName": "...", "role": "ADMIN" }
+            ]
+          }
+        },
+        {
+          "title": "Create User",
+          "method": "POST",
+          "path": "/api/users",
+          "requestBody": {
+            "fullName": "...",
+            "email": "...",
+            "password": "...",
+            "role": "MAPPING_USER"
+          }
+        },
+        {
+          "title": "Update User",
+          "method": "PUT",
+          "path": "/api/users/{id}"
+        },
+        {
+          "title": "Delete User",
+          "method": "DELETE",
+          "path": "/api/users/{id}"
+        }
+      ]
+    },
+    {
+      "name": "Tracking",
+      "component": "Tracking.tsx",
+      "endpoints": [
+        {
+          "title": "Get Activity Logs (Filtered)",
+          "method": "GET",
+          "paths": [
+            "/api/adp/mappings",
+            "/api/tracking/logs"
+          ],
+          "requestParams": ["userId", "dateFrom", "dateTo"]
+        }
+      ]
+    },
+    {
+      "name": "Configuration",
+      "component": "Configuration.tsx",
+      "endpoints": [
+        {
+          "title": "Get Config",
+          "method": "GET",
+          "path": "/api/config",
+          "responses": {
+            "200": {
+              "enableAI": true,
+              "aiConfidenceThreshold": 75,
+              "maintenanceMode": false,
+              "enableAuditLog": true
+            }
+          }
+        },
+        {
+          "title": "Update Config",
+          "method": "PUT",
+          "path": "/api/config",
+          "requestBody": {
+            "enableAI": true,
+            "aiConfidenceThreshold": 75,
+            "maintenanceMode": false,
+            "enableAuditLog": true
+          }
+        }
+      ]
+    }
+  ]
+}

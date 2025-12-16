@@ -39,3 +39,7 @@ The `/api/models/bulk` endpoint accepts JSON or CSV and expects existing `makeId
 - `model-bulk.csv`: CSV version with the same placeholders and headers `makeId,typeId,name,nameAr`.
 
 Both model sample files are ready to upload after substituting the IDs that exist in your environment.
+
+## API specification
+
+The consolidated API surface used by the frontend views is documented in `docs/vehicle-portal-api.json`. The file captures endpoints, expected request bodies, and example responses grouped by page (e.g., Dashboard, ADP Mapping, Users). All endpoints follow the JWT requirement noted in the document: include `Authorization: Bearer <token>` on every request except login.
