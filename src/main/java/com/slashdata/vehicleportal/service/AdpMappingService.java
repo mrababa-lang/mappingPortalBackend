@@ -88,12 +88,8 @@ public class AdpMappingService {
     }
 
     @Transactional
-    public void approve(String mappingId, User reviewer) {
-        if (mappingId == null || mappingId.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ADP mapping id is required");
-        }
-        ADPMapping mapping = adpMappingRepository.findById(mappingId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "ADP mapping not found"));
+    public void approve(String adpId, User reviewer) {
+        ADPMapping mapping = getMappingOrThrow(adpId);
         mapping.setReviewedAt(LocalDateTime.now());
         mapping.setReviewedBy(reviewer);
         adpMappingRepository.save(mapping);
@@ -101,12 +97,8 @@ public class AdpMappingService {
     }
 
     @Transactional
-    public void reject(String mappingId, User actor) {
-        if (mappingId == null || mappingId.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ADP mapping id is required");
-        }
-        ADPMapping mapping = adpMappingRepository.findById(mappingId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "ADP mapping not found"));
+    public void reject(String adpId, User actor) {
+        ADPMapping mapping = getMappingOrThrow(adpId);
         persistHistory(mapping, actor, "REJECTED");
         adpMappingRepository.delete(mapping);
     }
@@ -147,6 +139,14 @@ public class AdpMappingService {
             return null;
         }
         return userRepository.findByEmail(email).orElse(null);
+    }
+
+    private ADPMapping getMappingOrThrow(String adpId) {
+        if (adpId == null || adpId.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ADP mapping id is required");
+        }
+        return adpMappingRepository.findByAdpMasterId(adpId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "ADP mapping not found"));
     }
 
     private Make resolveMakeForStatus(MappingStatus status, Long makeId) {
