@@ -74,7 +74,7 @@ public class AdpPublicController {
         this.csvMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
-    @GetMapping("/makes")
+    @GetMapping("/makes/distinct")
     public ApiResponse<List<AdpAttributeDto>> getMakes() {
         return ApiResponse.of(extractDistinctAttributes(AttributeSelector.MAKE));
     }
@@ -104,7 +104,7 @@ public class AdpPublicController {
         return ApiResponse.of(adpMakeMappingRepository.save(mapping));
     }
 
-    @GetMapping("/types")
+    @GetMapping("/types/distinct")
     public ApiResponse<List<AdpAttributeDto>> getTypes() {
         return ApiResponse.of(extractDistinctAttributes(AttributeSelector.TYPE));
     }
