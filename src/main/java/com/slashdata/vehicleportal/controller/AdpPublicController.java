@@ -9,20 +9,14 @@ import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import com.slashdata.vehicleportal.dto.AdpAttributeDto;
 import com.slashdata.vehicleportal.dto.ApiResponse;
 import com.slashdata.vehicleportal.dto.BulkUploadResult;
-import com.slashdata.vehicleportal.dto.CreateAdpMakeMappingRequest;
 import com.slashdata.vehicleportal.entity.ADPMaster;
-import com.slashdata.vehicleportal.entity.ADPMakeMapping;
-import com.slashdata.vehicleportal.entity.Make;
 import com.slashdata.vehicleportal.repository.ADPMappingRepository;
-import com.slashdata.vehicleportal.repository.ADPMakeMappingRepository;
 import com.slashdata.vehicleportal.repository.ADPMasterRepository;
-import com.slashdata.vehicleportal.repository.MakeRepository;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.time.LocalDateTime;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -41,8 +35,6 @@ public class AdpPublicController {
 
     private final ADPMasterRepository adpMasterRepository;
     private final ADPMappingRepository adpMappingRepository;
-    private final ADPMakeMappingRepository adpMakeMappingRepository;
-    private final MakeRepository makeRepository;
     private final CsvMapper csvMapper;
     private final ObjectMapper objectMapper;
 
@@ -62,13 +54,9 @@ public class AdpPublicController {
 
     public AdpPublicController(ADPMasterRepository adpMasterRepository,
                                ADPMappingRepository adpMappingRepository,
-                               ADPMakeMappingRepository adpMakeMappingRepository,
-                               MakeRepository makeRepository,
                                ObjectMapper objectMapper) {
         this.adpMasterRepository = adpMasterRepository;
         this.adpMappingRepository = adpMappingRepository;
-        this.adpMakeMappingRepository = adpMakeMappingRepository;
-        this.makeRepository = makeRepository;
         this.objectMapper = objectMapper;
         this.csvMapper = new CsvMapper();
         this.csvMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -82,26 +70,6 @@ public class AdpPublicController {
     @GetMapping("/makes/map")
     public ApiResponse<Map<String, AdpAttributeDto>> getMakesMap() {
         return ApiResponse.of(extractDistinctAttributeMap(AttributeSelector.MAKE));
-    }
-
-    @PostMapping("/makes/map")
-    public ApiResponse<ADPMakeMapping> mapMake(@RequestBody CreateAdpMakeMappingRequest request) {
-        if (request == null || request.getAdpMakeId() == null || request.getAdpMakeId().isBlank()
-            || request.getSdMakeId() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "adpMakeId and sdMakeId are required");
-        }
-
-        Make sdMake = makeRepository.findById(request.getSdMakeId())
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Make not found"));
-
-        ADPMakeMapping mapping = adpMakeMappingRepository.findByAdpMakeId(request.getAdpMakeId())
-            .orElseGet(ADPMakeMapping::new);
-
-        mapping.setAdpMakeId(request.getAdpMakeId());
-        mapping.setSdMake(sdMake);
-        mapping.setUpdatedAt(LocalDateTime.now());
-
-        return ApiResponse.of(adpMakeMappingRepository.save(mapping));
     }
 
     @GetMapping("/types/distinct")
