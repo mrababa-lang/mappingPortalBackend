@@ -15,8 +15,11 @@ import com.slashdata.vehicleportal.repository.MakeRepository;
 import com.slashdata.vehicleportal.repository.ModelRepository;
 import com.slashdata.vehicleportal.repository.UserRepository;
 import java.time.LocalDateTime;
-import java.util.Objects;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -44,6 +47,48 @@ public class AdpMappingService {
         this.userRepository = userRepository;
         this.historyRepository = historyRepository;
         this.dashboardStatsService = dashboardStatsService;
+    }
+
+    @Transactional
+    public int createMissingModelMappingsForMake(String adpMakeId, Make sdMake) {
+        if (adpMakeId == null || adpMakeId.isBlank() || sdMake == null) {
+            return 0;
+        }
+
+        List<ADPMaster> masters = adpMasterRepository.findAllByAdpMakeId(adpMakeId);
+        if (masters.isEmpty()) {
+            return 0;
+        }
+
+        List<String> masterIds = masters.stream()
+            .map(ADPMaster::getId)
+            .collect(Collectors.toList());
+        Set<String> mappedMasterIds = adpMappingRepository.findByAdpMaster_IdIn(masterIds).stream()
+            .map(mapping -> mapping.getAdpMaster().getId())
+            .collect(Collectors.toSet());
+
+        List<ADPMapping> newMappings = new ArrayList<>();
+        LocalDateTime now = LocalDateTime.now();
+        for (ADPMaster master : masters) {
+            if (mappedMasterIds.contains(master.getId())) {
+                continue;
+            }
+            ADPMapping mapping = new ADPMapping();
+            mapping.setAdpMaster(master);
+            mapping.setMake(sdMake);
+            mapping.setStatus(MappingStatus.MISSING_MODEL);
+            mapping.setUpdatedAt(now);
+            newMappings.add(mapping);
+        }
+
+        if (newMappings.isEmpty()) {
+            return 0;
+        }
+
+        List<ADPMapping> saved = adpMappingRepository.saveAll(newMappings);
+        saved.forEach(mapping -> persistHistory(mapping, null, "CREATED"));
+        dashboardStatsService.recalculateDashboardAsync();
+        return saved.size();
     }
 
     @Transactional
