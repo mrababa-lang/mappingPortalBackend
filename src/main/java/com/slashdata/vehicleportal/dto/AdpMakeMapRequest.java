@@ -2,6 +2,7 @@ package com.slashdata.vehicleportal.dto;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 public class AdpMakeMapRequest {
 
@@ -9,9 +10,9 @@ public class AdpMakeMapRequest {
     @JsonAlias({"adp_make_id", "adpMakeID"})
     private String adpMakeId;
 
-    @NotBlank
+    @NotNull
     @JsonAlias({"sd_make_id", "sdMakeID"})
-    private String sdMakeId;
+    private Long sdMakeId;
 
     public String getAdpMakeId() {
         return adpMakeId;
@@ -21,11 +22,11 @@ public class AdpMakeMapRequest {
         this.adpMakeId = adpMakeId;
     }
 
-    public String getSdMakeId() {
+    public Long getSdMakeId() {
         return sdMakeId;
     }
 
-    public void setSdMakeId(String sdMakeId) {
+    public void setSdMakeId(Long sdMakeId) {
         this.sdMakeId = sdMakeId;
     }
 }
