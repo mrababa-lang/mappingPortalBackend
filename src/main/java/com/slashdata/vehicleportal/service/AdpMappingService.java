@@ -145,6 +145,7 @@ public class AdpMappingService {
     public void reject(String adpId, User actor) {
         ADPMapping mapping = getMappingOrThrow(adpId);
         persistHistory(mapping, actor, "REJECTED");
+        historyRepository.deleteByMapping_Id(mapping.getId());
         adpMappingRepository.delete(mapping);
     }
 
@@ -176,6 +177,7 @@ public class AdpMappingService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "One or more ADP mappings were not found");
         }
         mappings.forEach(mapping -> persistHistory(mapping, actor, "REJECTED"));
+        historyRepository.deleteByMapping_IdIn(ids);
         adpMappingRepository.deleteAllById(ids);
     }
 
