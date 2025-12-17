@@ -86,7 +86,7 @@ class MakeAndModelBulkControllerTest {
 
         String payload = readFromSample("samples/model-bulk.json")
             .replace("<MAKE_ID>", make.getId().toString())
-            .replace("<TYPE_ID>", type.getId());
+            .replace("<TYPE_ID>", type.getId().toString());
 
         mockMvc.perform(post("/api/models/bulk")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -94,7 +94,7 @@ class MakeAndModelBulkControllerTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data", hasSize(2)))
             .andExpect(jsonPath("$.data[0].name").value("Corolla"))
-            .andExpect(jsonPath("$.data[1].type.id").value(type.getId()));
+            .andExpect(jsonPath("$.data[1].type.id").value(type.getId().toString()));
 
         assertThat(modelRepository.count()).isEqualTo(2);
         assertThat(modelRepository.findAll()).extracting(Model::getName)
@@ -109,7 +109,7 @@ class MakeAndModelBulkControllerTest {
 
         String payload = readFromSample("samples/model-bulk.csv")
             .replace("<MAKE_ID>", make.getId().toString())
-            .replace("<TYPE_ID>", type.getId());
+            .replace("<TYPE_ID>", type.getId().toString());
 
         mockMvc.perform(post("/api/models/bulk")
                 .contentType("text/csv")
@@ -128,10 +128,10 @@ class MakeAndModelBulkControllerTest {
                 .contentType("text/csv")
                 .content("id,name,name_ar\n101,Tesla,تسلا"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.data.records[0].id").value(101))
+            .andExpect(jsonPath("$.data.records[0].id").value("101"))
             .andExpect(jsonPath("$.data.records[0].name").value("Tesla"));
 
-        assertThat(makeRepository.findById(101L)).isPresent();
+        assertThat(makeRepository.findById("101")).isPresent();
     }
 
     @Test
@@ -158,12 +158,14 @@ class MakeAndModelBulkControllerTest {
 
     private Make createMake(String name) {
         Make make = new Make();
+        make.setId(String.valueOf(makeRepository.count() + 1));
         make.setName(name);
         return makeRepository.save(make);
     }
 
     private VehicleType createVehicleType(String name) {
         VehicleType type = new VehicleType();
+        type.setId(vehicleTypeRepository.count() + 1);
         type.setName(name);
         return vehicleTypeRepository.save(type);
     }

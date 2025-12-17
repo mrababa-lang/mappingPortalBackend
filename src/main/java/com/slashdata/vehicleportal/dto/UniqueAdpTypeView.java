@@ -3,6 +3,6 @@ package com.slashdata.vehicleportal.dto;
 public interface UniqueAdpTypeView {
     String getAdpTypeId();
     String getAdpTypeName();
-    String getSdTypeId();
+    Long getSdTypeId();
     String getSdTypeName();
 }

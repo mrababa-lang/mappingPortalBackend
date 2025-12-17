@@ -2,6 +2,7 @@ package com.slashdata.vehicleportal.dto;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 public class AdpTypeMapRequest {
 
@@ -9,9 +10,9 @@ public class AdpTypeMapRequest {
     @JsonAlias({"adp_type_id", "adpTypeID"})
     private String adpTypeId;
 
-    @NotBlank
+    @NotNull
     @JsonAlias({"sd_type_id", "sdTypeID"})
-    private String sdTypeId;
+    private Long sdTypeId;
 
     public String getAdpTypeId() {
         return adpTypeId;
@@ -21,11 +22,11 @@ public class AdpTypeMapRequest {
         this.adpTypeId = adpTypeId;
     }
 
-    public String getSdTypeId() {
+    public Long getSdTypeId() {
         return sdTypeId;
     }
 
-    public void setSdTypeId(String sdTypeId) {
+    public void setSdTypeId(Long sdTypeId) {
         this.sdTypeId = sdTypeId;
     }
 }
