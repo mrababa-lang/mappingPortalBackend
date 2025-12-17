@@ -38,6 +38,9 @@ public class StatsController {
         long totalMakes = makeRepository.count();
         long totalModels = modelRepository.count();
         long totalTypes = vehicleTypeRepository.count();
+        long adpTotalMakes = adpMasterRepository.countDistinctAdpMakeId();
+        long adpTotalModels = adpMasterRepository.countDistinctAdpModelId();
+        long adpTotalTypes = adpMasterRepository.countDistinctAdpTypeId();
         long adpTotal = adpMasterRepository.count();
         long mappedCount = adpMappingRepository.countByStatus(MappingStatus.MAPPED);
         long missingModelCount = adpMappingRepository.countByStatus(MappingStatus.MISSING_MODEL);
@@ -52,6 +55,9 @@ public class StatsController {
         stats.put("totalMakes", totalMakes);
         stats.put("totalModels", totalModels);
         stats.put("totalTypes", totalTypes);
+        stats.put("adpTotalMakes", adpTotalMakes);
+        stats.put("adpTotalModels", adpTotalModels);
+        stats.put("adpTotalTypes", adpTotalTypes);
         stats.put("mappedCount", mappedCount);
         stats.put("unmappedCount", unmappedCount);
         stats.put("missingModelCount", missingModelCount);

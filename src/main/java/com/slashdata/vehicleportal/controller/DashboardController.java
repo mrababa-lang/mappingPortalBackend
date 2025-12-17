@@ -2,7 +2,7 @@ package com.slashdata.vehicleportal.controller;
 
 import com.slashdata.vehicleportal.dto.ApiResponse;
 import com.slashdata.vehicleportal.dto.TrendPoint;
-import com.slashdata.vehicleportal.dto.RecentActivityDto;
+import com.slashdata.vehicleportal.dto.ActivityLogDto;
 import com.slashdata.vehicleportal.repository.ADPMappingRepository;
 import com.slashdata.vehicleportal.repository.ADPMasterRepository;
 import com.slashdata.vehicleportal.repository.MakeRepository;
@@ -65,9 +65,9 @@ public class DashboardController {
     }
 
     @GetMapping("/activity")
-    public ApiResponse<List<RecentActivityDto>> activity() {
-        List<RecentActivityDto> logs = adpMappingRepository.findTop10ByOrderByUpdatedAtDesc().stream()
-            .map(RecentActivityDto::from)
+    public ApiResponse<List<ActivityLogDto>> activity() {
+        List<ActivityLogDto> logs = adpMappingRepository.findTop10ByOrderByUpdatedAtDesc().stream()
+            .map(ActivityLogDto::from)
             .collect(Collectors.toList());
         return ApiResponse.of(logs);
     }

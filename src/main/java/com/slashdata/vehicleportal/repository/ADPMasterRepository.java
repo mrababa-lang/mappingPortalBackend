@@ -58,4 +58,13 @@ public interface ADPMasterRepository extends JpaRepository<ADPMaster, String>, J
         """,
         nativeQuery = true)
     Page<UniqueAdpTypeView> findUniqueTypes(@Param("q") String query, Pageable pageable);
+
+    @Query("SELECT COUNT(DISTINCT am.adpMakeId) FROM ADPMaster am")
+    long countDistinctAdpMakeId();
+
+    @Query("SELECT COUNT(DISTINCT am.adpModelId) FROM ADPMaster am")
+    long countDistinctAdpModelId();
+
+    @Query("SELECT COUNT(DISTINCT am.adpTypeId) FROM ADPMaster am")
+    long countDistinctAdpTypeId();
 }
