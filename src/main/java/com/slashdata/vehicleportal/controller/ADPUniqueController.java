@@ -1,7 +1,9 @@
 package com.slashdata.vehicleportal.controller;
 
 import com.slashdata.vehicleportal.dto.AdpMakeMapRequest;
+import com.slashdata.vehicleportal.dto.AdpMakeExportRow;
 import com.slashdata.vehicleportal.dto.AdpTypeMapRequest;
+import com.slashdata.vehicleportal.dto.AdpTypeExportRow;
 import com.slashdata.vehicleportal.dto.ApiResponse;
 import com.slashdata.vehicleportal.entity.ADPMakeMapping;
 import com.slashdata.vehicleportal.entity.ADPTypeMapping;
@@ -14,10 +16,18 @@ import com.slashdata.vehicleportal.repository.MakeRepository;
 import com.slashdata.vehicleportal.repository.VehicleTypeRepository;
 import com.slashdata.vehicleportal.service.AdpMappingService;
 import jakarta.validation.Valid;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.stream.Stream;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -25,6 +35,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 @RestController
 @RequestMapping("/api/adp")
@@ -53,8 +64,10 @@ public class ADPUniqueController {
     }
 
     @GetMapping("/makes")
-    public ApiResponse<?> uniqueMakes(@RequestParam(value = "q", required = false) String query, Pageable pageable) {
-        return ApiResponse.fromPage(adpMasterRepository.findUniqueMakes(query, pageable));
+    public ApiResponse<?> uniqueMakes(@RequestParam(value = "q", required = false) String query,
+                                      @RequestParam(value = "status", required = false) String status,
+                                      Pageable pageable) {
+        return ApiResponse.fromPage(adpMasterRepository.findUniqueMakes(normalizeQuery(query), normalizeStatus(status), pageable));
     }
 
     @PostMapping("/makes/map")
@@ -76,8 +89,10 @@ public class ADPUniqueController {
     }
 
     @GetMapping("/types")
-    public ApiResponse<?> uniqueTypes(@RequestParam(value = "q", required = false) String query, Pageable pageable) {
-        return ApiResponse.fromPage(adpMasterRepository.findUniqueTypes(query, pageable));
+    public ApiResponse<?> uniqueTypes(@RequestParam(value = "q", required = false) String query,
+                                      @RequestParam(value = "status", required = false) String status,
+                                      Pageable pageable) {
+        return ApiResponse.fromPage(adpMasterRepository.findUniqueTypes(normalizeQuery(query), normalizeStatus(status), pageable));
     }
 
     @PostMapping("/types/map")
@@ -93,5 +108,129 @@ public class ADPUniqueController {
         mapping.setUpdatedAt(LocalDateTime.now());
 
         return ApiResponse.of(adpTypeMappingRepository.save(mapping));
+    }
+
+    @GetMapping("/makes/export")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_USER', 'MAPPING_ADMIN')")
+    @Transactional(readOnly = true)
+    public ResponseEntity<StreamingResponseBody> exportMakes(
+        @RequestParam(value = "q", required = false) String query,
+        @RequestParam(value = "status", required = false) String status,
+        @RequestParam(value = "format", defaultValue = "csv") String format) {
+
+        if (!"csv".equalsIgnoreCase(format)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported export format");
+        }
+
+        String normalizedStatus = normalizeStatus(status);
+        StreamingResponseBody responseBody = outputStream -> {
+            try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8));
+                 Stream<AdpMakeExportRow> rows = adpMasterRepository.streamUniqueMakesForExport(
+                     normalizeQuery(query), normalizedStatus)) {
+                writeMakeCsvHeader(writer);
+                rows.forEach(row -> writeMakeCsvRow(writer, row));
+                writer.flush();
+            }
+        };
+
+        return ResponseEntity.ok()
+            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"adp_makes_export.csv\"")
+            .contentType(MediaType.parseMediaType("text/csv"))
+            .body(responseBody);
+    }
+
+    @GetMapping("/types/export")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_USER', 'MAPPING_ADMIN')")
+    @Transactional(readOnly = true)
+    public ResponseEntity<StreamingResponseBody> exportTypes(
+        @RequestParam(value = "q", required = false) String query,
+        @RequestParam(value = "status", required = false) String status,
+        @RequestParam(value = "format", defaultValue = "csv") String format) {
+
+        if (!"csv".equalsIgnoreCase(format)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported export format");
+        }
+
+        String normalizedStatus = normalizeStatus(status);
+        StreamingResponseBody responseBody = outputStream -> {
+            try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8));
+                 Stream<AdpTypeExportRow> rows = adpMasterRepository.streamUniqueTypesForExport(
+                     normalizeQuery(query), normalizedStatus)) {
+                writeTypeCsvHeader(writer);
+                rows.forEach(row -> writeTypeCsvRow(writer, row));
+                writer.flush();
+            }
+        };
+
+        return ResponseEntity.ok()
+            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"adp_types_export.csv\"")
+            .contentType(MediaType.parseMediaType("text/csv"))
+            .body(responseBody);
+    }
+
+    private String normalizeStatus(String status) {
+        if (status == null || status.isBlank() || "all".equalsIgnoreCase(status)) {
+            return "all";
+        }
+        if ("mapped".equalsIgnoreCase(status) || "unmapped".equalsIgnoreCase(status)) {
+            return status.toLowerCase();
+        }
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid status filter");
+    }
+
+    private String normalizeQuery(String query) {
+        if (query == null) {
+            return null;
+        }
+        String trimmed = query.trim();
+        return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private void writeMakeCsvHeader(PrintWriter writer) {
+        writer.println(String.join(",",
+            "ADP Make ID",
+            "English Description",
+            "Arabic Description",
+            "SlashData Make ID",
+            "SlashData Make Name"));
+    }
+
+    private void writeMakeCsvRow(PrintWriter writer, AdpMakeExportRow row) {
+        writer.println(String.join(",",
+            escape(row.getAdpMakeId()),
+            escape(row.getAdpMakeName()),
+            escape(row.getAdpMakeNameAr()),
+            escape(row.getSdMakeId()),
+            escape(row.getSdMakeName())));
+    }
+
+    private void writeTypeCsvHeader(PrintWriter writer) {
+        writer.println(String.join(",",
+            "ADP Type ID",
+            "English Description",
+            "Arabic Description",
+            "SlashData Type ID",
+            "SlashData Type Name"));
+    }
+
+    private void writeTypeCsvRow(PrintWriter writer, AdpTypeExportRow row) {
+        writer.println(String.join(",",
+            escape(row.getAdpTypeId()),
+            escape(row.getAdpTypeName()),
+            escape(row.getAdpTypeNameAr()),
+            escape(row.getSdTypeId()),
+            escape(row.getSdTypeName())));
+    }
+
+    private String escape(Object value) {
+        if (value == null) {
+            return "";
+        }
+        String stringValue = value.toString();
+        String escaped = stringValue.replace("\"", "\"\"");
+        if (escaped.contains(",") || escaped.contains("\n") || escaped.contains("\r")) {
+            return "\"" + escaped + "\"";
+        }
+        return escaped;
     }
 }
