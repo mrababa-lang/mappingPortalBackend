@@ -85,6 +85,7 @@ public class MakeBulkController {
         }
 
         String[] headers = lines[0].split(",");
+        int idIndex = findHeaderIndex(headers, "id", "make_id");
         int nameIndex = findHeaderIndex(headers, "name");
         int nameArIndex = findHeaderIndex(headers, "name_ar", "namear", "name_arabic");
 
@@ -102,6 +103,13 @@ public class MakeBulkController {
                 continue;
             }
             Make make = new Make();
+            if (idIndex >= 0 && idIndex < values.length && !values[idIndex].isBlank()) {
+                try {
+                    make.setId(Long.parseLong(values[idIndex].trim()));
+                } catch (NumberFormatException ignored) {
+                    // If ID is invalid, proceed without setting it.
+                }
+            }
             make.setName(values[nameIndex].trim());
             if (nameArIndex >= 0 && nameArIndex < values.length) {
                 make.setNameAr(values[nameArIndex].trim());

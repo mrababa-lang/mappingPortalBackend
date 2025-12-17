@@ -81,11 +81,28 @@ public class ModelService {
         int missingFields = 0;
         int duplicateModels = 0;
 
-        for (ModelRequest request : requests) {
-            if (request == null || request.getName() == null || request.getName().trim().isEmpty()
-                || request.getMakeId() == null || request.getTypeId() == null) {
+        List<String> skipReasons = new ArrayList<>();
+
+        for (int i = 0; i < requests.size(); i++) {
+            ModelRequest request = requests.get(i);
+            int recordNumber = i + 1;
+
+            List<String> missingFieldNames = new ArrayList<>();
+            if (request == null || request.getMakeId() == null) {
+                missingFieldNames.add("makeId");
+            }
+            if (request == null || request.getTypeId() == null) {
+                missingFieldNames.add("typeId");
+            }
+            if (request == null || request.getName() == null || request.getName().trim().isEmpty()) {
+                missingFieldNames.add("name");
+            }
+
+            if (!missingFieldNames.isEmpty()) {
                 skipped++;
                 missingFields++;
+                skipReasons.add(String.format("Record %d missing required field(s): %s", recordNumber,
+                    String.join(", ", missingFieldNames)));
                 continue;
             }
 
@@ -114,7 +131,7 @@ public class ModelService {
 
         List<Model> savedModels = models.isEmpty() ? List.of() : modelRepository.saveAll(models);
 
-        List<String> reasons = new ArrayList<>();
+        List<String> reasons = new ArrayList<>(skipReasons);
         if (duplicateModels > 0) {
             reasons.add(String.format("%d record(s) skipped because the model already exists for the make.", duplicateModels));
         }
