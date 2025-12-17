@@ -106,12 +106,14 @@ public interface ADPMappingRepository extends JpaRepository<ADPMapping, String>,
         where mapping.status in :statuses
           and (:query is null or lower(master.makeEnDesc) like lower(concat('%', :query, '%'))
               or lower(master.modelEnDesc) like lower(concat('%', :query, '%')))
+          and (:reviewedOnly = false or mapping.reviewedAt is not null)
           and (:from is null or mapping.updatedAt is null or mapping.updatedAt >= :from)
           and (:to is null or mapping.updatedAt is null or mapping.updatedAt <= :to)
         """)
     Page<AdpMappingViewDto> findMappedVehicleViews(@Param("query") String query,
                                                    @Param("from") LocalDateTime from,
                                                    @Param("to") LocalDateTime to,
+                                                   @Param("reviewedOnly") boolean reviewedOnly,
                                                    @Param("statuses") Collection<MappingStatus> statuses,
                                                    Pageable pageable);
 
@@ -160,11 +162,13 @@ public interface ADPMappingRepository extends JpaRepository<ADPMapping, String>,
         left join model.type type
         left join mapping.updatedBy updater
         where mapping.status in :statuses
+          and (:reviewedOnly = false or mapping.reviewedAt is not null)
           and (:from is null or mapping.updatedAt is null or mapping.updatedAt >= :from)
           and (:to is null or mapping.updatedAt is null or mapping.updatedAt <= :to)
         order by master.makeEnDesc, master.modelEnDesc
         """)
     Stream<MappedVehicleExportRow> streamMappedVehiclesForExport(@Param("statuses") Collection<MappingStatus> statuses,
                                                                  @Param("from") LocalDateTime from,
-                                                                 @Param("to") LocalDateTime to);
+                                                                 @Param("to") LocalDateTime to,
+                                                                 @Param("reviewedOnly") boolean reviewedOnly);
 }

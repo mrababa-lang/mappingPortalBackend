@@ -50,12 +50,13 @@ public class ADPMappedVehiclesController {
                                @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
                                @RequestParam(value = "dateTo", required = false)
                                @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
+                               @RequestParam(value = "reviewedOnly", defaultValue = "false") boolean reviewedOnly,
                                Pageable pageable) {
         LocalDateTime from = dateFrom != null ? dateFrom.atStartOfDay() : null;
         LocalDateTime to = dateTo != null ? dateTo.plusDays(1).atStartOfDay().minusNanos(1) : null;
 
-        Page<AdpMappingViewDto> page = adpMappingRepository.findMappedVehicleViews(query, from, to, MAPPED_STATUSES,
-            pageable);
+        Page<AdpMappingViewDto> page = adpMappingRepository.findMappedVehicleViews(query, from, to, reviewedOnly,
+            MAPPED_STATUSES, pageable);
         return ApiResponse.fromPage(page);
     }
 
@@ -67,6 +68,7 @@ public class ADPMappedVehiclesController {
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
         @RequestParam(value = "dateTo", required = false)
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
+        @RequestParam(value = "reviewedOnly", defaultValue = "false") boolean reviewedOnly,
         @RequestParam(value = "format", defaultValue = "csv") String format) {
 
         if (!"csv".equalsIgnoreCase(format)) {
@@ -79,7 +81,7 @@ public class ADPMappedVehiclesController {
         StreamingResponseBody responseBody = outputStream -> {
             try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8));
                  Stream<MappedVehicleExportRow> rows = adpMappingRepository.streamMappedVehiclesForExport(MAPPED_STATUSES,
-                     from, to)) {
+                     from, to, reviewedOnly)) {
                 writeCsvHeader(writer);
                 rows.forEach(row -> writeCsvRow(writer, row));
                 writer.flush();
