@@ -2,11 +2,14 @@ package com.slashdata.vehicleportal.repository;
 
 import com.slashdata.vehicleportal.entity.ADPMapping;
 import com.slashdata.vehicleportal.dto.AdpMappingViewDto;
+import com.slashdata.vehicleportal.dto.MappedVehicleExportRow;
 import com.slashdata.vehicleportal.entity.MappingStatus;
 import com.slashdata.vehicleportal.entity.User;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
@@ -76,6 +79,42 @@ public interface ADPMappingRepository extends JpaRepository<ADPMapping, String>,
                                              @Param("to") LocalDateTime to,
                                              Pageable pageable);
 
+    @Query("""
+        select new com.slashdata.vehicleportal.dto.AdpMappingViewDto(
+            master.id,
+            master.makeEnDesc,
+            master.modelEnDesc,
+            master.typeEnDesc,
+            mapping.status,
+            make.id,
+            make.name,
+            model.id,
+            model.name,
+            updater.id,
+            updater.fullName,
+            mapping.updatedAt,
+            mapping.reviewedAt,
+            reviewer.id,
+            reviewer.fullName
+        )
+        from ADPMapping mapping
+        join mapping.adpMaster master
+        left join mapping.make make
+        left join mapping.model model
+        left join mapping.updatedBy updater
+        left join mapping.reviewedBy reviewer
+        where mapping.status in :statuses
+          and (:query is null or lower(master.makeEnDesc) like lower(concat('%', :query, '%'))
+              or lower(master.modelEnDesc) like lower(concat('%', :query, '%')))
+          and (:from is null or mapping.updatedAt is null or mapping.updatedAt >= :from)
+          and (:to is null or mapping.updatedAt is null or mapping.updatedAt <= :to)
+        """)
+    Page<AdpMappingViewDto> findMappedVehicleViews(@Param("query") String query,
+                                                   @Param("from") LocalDateTime from,
+                                                   @Param("to") LocalDateTime to,
+                                                   @Param("statuses") Collection<MappingStatus> statuses,
+                                                   Pageable pageable);
+
     @Transactional
     @Modifying
     @Query("update ADPMapping m set m.status = 'MAPPED', m.model = null, m.updatedAt = :updatedAt where m.model.id in :modelIds")
@@ -100,4 +139,32 @@ public interface ADPMappingRepository extends JpaRepository<ADPMapping, String>,
         + "WHERE (:from is null or updated_at >= :from) and (:to is null or updated_at <= :to) "
         + "GROUP BY DATE(updated_at) ORDER BY DATE(updated_at)", nativeQuery = true)
     List<Object[]> aggregateByDate(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
+
+    @Query("""
+        select new com.slashdata.vehicleportal.dto.MappedVehicleExportRow(
+            master.id,
+            master.makeEnDesc,
+            master.modelEnDesc,
+            master.typeEnDesc,
+            make.name,
+            model.name,
+            type.name,
+            mapping.status,
+            updater.fullName,
+            mapping.updatedAt
+        )
+        from ADPMapping mapping
+        join mapping.adpMaster master
+        left join mapping.make make
+        left join mapping.model model
+        left join model.type type
+        left join mapping.updatedBy updater
+        where mapping.status in :statuses
+          and (:from is null or mapping.updatedAt is null or mapping.updatedAt >= :from)
+          and (:to is null or mapping.updatedAt is null or mapping.updatedAt <= :to)
+        order by master.makeEnDesc, master.modelEnDesc
+        """)
+    Stream<MappedVehicleExportRow> streamMappedVehiclesForExport(@Param("statuses") Collection<MappingStatus> statuses,
+                                                                 @Param("from") LocalDateTime from,
+                                                                 @Param("to") LocalDateTime to);
 }
