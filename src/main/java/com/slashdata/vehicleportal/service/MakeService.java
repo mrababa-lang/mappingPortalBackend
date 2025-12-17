@@ -64,10 +64,22 @@ public class MakeService {
         int duplicateNames = 0;
         int invalidNames = 0;
 
-        for (Make make : makes) {
+        List<String> skipReasons = new ArrayList<>();
+
+        for (int i = 0; i < makes.size(); i++) {
+            Make make = makes.get(i);
+            int recordNumber = i + 1;
+
+            List<String> missingFields = new ArrayList<>();
             if (make == null || make.getName() == null || make.getName().trim().isEmpty()) {
+                missingFields.add("name");
+            }
+
+            if (!missingFields.isEmpty()) {
                 skipped++;
                 invalidNames++;
+                skipReasons.add(String.format("Record %d missing required field(s): %s", recordNumber,
+                    String.join(", ", missingFields)));
                 continue;
             }
 
@@ -81,6 +93,7 @@ public class MakeService {
             }
 
             Make newMake = new Make();
+            newMake.setId(make.getId());
             newMake.setName(normalizedName);
             newMake.setNameAr(make.getNameAr());
             makesToSave.add(newMake);
@@ -89,7 +102,7 @@ public class MakeService {
 
         List<Make> savedMakes = makesToSave.isEmpty() ? List.of() : makeRepository.saveAll(makesToSave);
 
-        List<String> reasons = new ArrayList<>();
+        List<String> reasons = new ArrayList<>(skipReasons);
         if (duplicateNames > 0) {
             reasons.add(String.format("%d record(s) skipped because the make name already exists.", duplicateNames));
         }

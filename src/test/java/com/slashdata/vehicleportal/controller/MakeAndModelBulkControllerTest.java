@@ -2,6 +2,7 @@ package com.slashdata.vehicleportal.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -119,6 +120,40 @@ class MakeAndModelBulkControllerTest {
             .andExpect(jsonPath("$.data[1].nameAr").value("كامري"));
 
         assertThat(modelRepository.count()).isEqualTo(2);
+    }
+
+    @Test
+    void bulkCreateMakesUsesIdFromCsv() throws Exception {
+        mockMvc.perform(post("/api/makes/bulk")
+                .contentType("text/csv")
+                .content("id,name,name_ar\n101,Tesla,تسلا"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.records[0].id").value(101))
+            .andExpect(jsonPath("$.data.records[0].name").value("Tesla"));
+
+        assertThat(makeRepository.findById(101L)).isPresent();
+    }
+
+    @Test
+    void bulkCreateMakesReportsMissingField() throws Exception {
+        mockMvc.perform(post("/api/makes/bulk")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("[{\"name\":\"   \"} ]"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.recordsSkipped").value(1))
+            .andExpect(jsonPath("$.data.skipReasons[0]").value(containsString("name")));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void bulkCreateModelsReportsMissingFields() throws Exception {
+        mockMvc.perform(post("/api/models/bulk")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("[{\"name\":\"\",\"makeId\":null,\"typeId\":null}]"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.recordsSkipped").value(1))
+            .andExpect(jsonPath("$.data.skipReasons[0]").value(
+                containsString("makeId, typeId, name")));
     }
 
     private Make createMake(String name) {
