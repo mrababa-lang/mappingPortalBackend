@@ -12,13 +12,14 @@ public final class ADPMappingSpecifications {
 
     public static Specification<ADPMapping> reviewStatus(String reviewStatus) {
         return (root, cq, cb) -> {
+            var mappedStatusPredicate = cb.equal(root.get("status"), MappingStatus.MAPPED);
             if (reviewStatus == null) {
-                return cb.conjunction();
+                return mappedStatusPredicate;
             }
             return switch (reviewStatus.toLowerCase()) {
-                case "pending" -> cb.isNull(root.get("reviewedAt"));
-                case "reviewed" -> cb.isNotNull(root.get("reviewedAt"));
-                default -> cb.conjunction();
+                case "pending" -> cb.and(mappedStatusPredicate, cb.isNull(root.get("reviewedAt")));
+                case "reviewed" -> cb.and(mappedStatusPredicate, cb.isNotNull(root.get("reviewedAt")));
+                default -> mappedStatusPredicate;
             };
         };
     }
