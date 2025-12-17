@@ -40,8 +40,8 @@ public class MasterVehicleController {
                                @RequestParam(value = "makeId", required = false) Long makeId,
                                @RequestParam(value = "typeId", required = false) String typeId,
                                Pageable pageable) {
-        Page<MasterVehicleView> page = modelRepository.findMasterVehicleViews(normalizeQuery(query), makeId, typeId,
-            pageable);
+        Page<MasterVehicleView> page = modelRepository.findMasterVehicleViews(normalizeQuery(query), makeId,
+            normalizeTypeId(typeId), pageable);
         return ApiResponse.fromPage(page);
     }
 
@@ -59,7 +59,8 @@ public class MasterVehicleController {
 
         StreamingResponseBody responseBody = outputStream -> {
             try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8));
-                 Stream<MasterVehicleExportRow> rows = modelRepository.streamMasterVehiclesForExport(makeId, typeId)) {
+                 Stream<MasterVehicleExportRow> rows = modelRepository.streamMasterVehiclesForExport(makeId,
+                     normalizeTypeId(typeId))) {
                 writeCsvHeader(writer);
                 rows.forEach(row -> writeCsvRow(writer, row));
                 writer.flush();
@@ -77,6 +78,14 @@ public class MasterVehicleController {
             return null;
         }
         String trimmed = query.trim();
+        return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private String normalizeTypeId(String typeId) {
+        if (typeId == null) {
+            return null;
+        }
+        String trimmed = typeId.trim();
         return trimmed.isEmpty() ? null : trimmed;
     }
 
