@@ -3,7 +3,7 @@ package com.slashdata.vehicleportal.dto;
 public class CreateAdpMakeMappingRequest {
 
     private String adpMakeId;
-    private Long sdMakeId;
+    private String sdMakeId;
 
     public String getAdpMakeId() {
         return adpMakeId;
@@ -13,11 +13,11 @@ public class CreateAdpMakeMappingRequest {
         this.adpMakeId = adpMakeId;
     }
 
-    public Long getSdMakeId() {
+    public String getSdMakeId() {
         return sdMakeId;
     }
 
-    public void setSdMakeId(Long sdMakeId) {
+    public void setSdMakeId(String sdMakeId) {
         this.sdMakeId = sdMakeId;
     }
 }
