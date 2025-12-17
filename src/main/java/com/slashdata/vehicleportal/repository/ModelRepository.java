@@ -41,7 +41,7 @@ public interface ModelRepository extends JpaRepository<Model, String> {
         """)
     Page<MasterVehicleView> findMasterVehicleViews(@Param("query") String query,
                                                    @Param("makeId") Long makeId,
-                                                   @Param("typeId") Long typeId,
+                                                   @Param("typeId") String typeId,
                                                    Pageable pageable);
 
     @Query("""
@@ -63,5 +63,5 @@ public interface ModelRepository extends JpaRepository<Model, String> {
         order by make.name, model.name
         """)
     Stream<MasterVehicleExportRow> streamMasterVehiclesForExport(@Param("makeId") Long makeId,
-                                                                 @Param("typeId") Long typeId);
+                                                                 @Param("typeId") String typeId);
 }

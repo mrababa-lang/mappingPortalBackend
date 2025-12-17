@@ -8,11 +8,11 @@ public class MasterVehicleExportRow {
     private final String modelId;
     private final String modelName;
     private final String modelNameAr;
-    private final Long typeId;
+    private final String typeId;
     private final String typeName;
 
     public MasterVehicleExportRow(Long makeId, String makeName, String makeNameAr, String modelId, String modelName,
-                                  String modelNameAr, Long typeId, String typeName) {
+                                  String modelNameAr, String typeId, String typeName) {
         this.makeId = makeId;
         this.makeName = makeName;
         this.makeNameAr = makeNameAr;
@@ -47,7 +47,7 @@ public class MasterVehicleExportRow {
         return modelNameAr;
     }
 
-    public Long getTypeId() {
+    public String getTypeId() {
         return typeId;
     }
 

@@ -38,7 +38,7 @@ public class MasterVehicleController {
     @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_USER', 'MAPPING_ADMIN')")
     public ApiResponse<?> list(@RequestParam(value = "q", required = false) String query,
                                @RequestParam(value = "makeId", required = false) Long makeId,
-                               @RequestParam(value = "typeId", required = false) Long typeId,
+                               @RequestParam(value = "typeId", required = false) String typeId,
                                Pageable pageable) {
         Page<MasterVehicleView> page = modelRepository.findMasterVehicleViews(normalizeQuery(query), makeId, typeId,
             pageable);
@@ -50,7 +50,7 @@ public class MasterVehicleController {
     @Transactional(readOnly = true)
     public ResponseEntity<StreamingResponseBody> exportCsv(
         @RequestParam(value = "makeId", required = false) Long makeId,
-        @RequestParam(value = "typeId", required = false) Long typeId,
+        @RequestParam(value = "typeId", required = false) String typeId,
         @RequestParam(value = "format", defaultValue = "csv") String format) {
 
         if (!"csv".equalsIgnoreCase(format)) {
