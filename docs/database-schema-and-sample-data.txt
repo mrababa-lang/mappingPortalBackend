@@ -1,6 +1,7 @@
 # Database tables and sample data for SlashData Vehicle Portal
 
-The statements below target MySQL 8 and mirror the JPA entity mappings in the backend. Run them in the order shown to create the tables and seed a small set of related records for local development.
+The statements below target MySQL 8 and mirror the JPA entity mappings in the backend. Run them in the order shown to create the
+ tables and seed a small set of related records for local development.
 
 ## Table creation
 ```sql
@@ -17,7 +18,7 @@ CREATE TABLE users (
 );
 
 CREATE TABLE vehicle_types (
-    id CHAR(36) NOT NULL PRIMARY KEY,
+    id INT UNSIGNED NOT NULL PRIMARY KEY,
     name VARCHAR(100) NOT NULL UNIQUE,
     name_ar VARCHAR(100),
     description TEXT,
@@ -25,15 +26,15 @@ CREATE TABLE vehicle_types (
 );
 
 CREATE TABLE makes (
-    id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    id VARCHAR(50) NOT NULL PRIMARY KEY,
     name VARCHAR(100) NOT NULL UNIQUE,
     name_ar VARCHAR(100)
 );
 
 CREATE TABLE models (
-    id CHAR(36) NOT NULL PRIMARY KEY,
-    make_id BIGINT NOT NULL,
-    type_id CHAR(36) NOT NULL,
+    id INT UNSIGNED NOT NULL PRIMARY KEY,
+    make_id VARCHAR(50) NOT NULL,
+    type_id INT UNSIGNED NOT NULL,
     name VARCHAR(100) NOT NULL,
     name_ar VARCHAR(100),
     CONSTRAINT uq_models_make_name UNIQUE (make_id, name),
@@ -57,7 +58,7 @@ CREATE TABLE adp_master (
 CREATE TABLE adp_make_mappings (
     id CHAR(36) NOT NULL PRIMARY KEY,
     adp_make_id VARCHAR(50) NOT NULL UNIQUE,
-    sd_make_id BIGINT NOT NULL,
+    sd_make_id VARCHAR(50) NOT NULL,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_adp_make_mappings_make FOREIGN KEY (sd_make_id) REFERENCES makes (id)
 );
@@ -65,7 +66,7 @@ CREATE TABLE adp_make_mappings (
 CREATE TABLE adp_type_mappings (
     id CHAR(36) NOT NULL PRIMARY KEY,
     adp_type_id VARCHAR(50) NOT NULL UNIQUE,
-    sd_type_id CHAR(36) NOT NULL,
+    sd_type_id INT UNSIGNED NOT NULL,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_adp_type_mappings_type FOREIGN KEY (sd_type_id) REFERENCES vehicle_types (id)
 );
@@ -73,8 +74,8 @@ CREATE TABLE adp_type_mappings (
 CREATE TABLE adp_mappings (
     id CHAR(36) NOT NULL PRIMARY KEY,
     adp_id CHAR(36) NOT NULL,
-    make_id BIGINT,
-    model_id CHAR(36),
+    make_id VARCHAR(50),
+    model_id INT UNSIGNED,
     status VARCHAR(20) NOT NULL DEFAULT 'MAPPED',
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_by BIGINT,
@@ -121,20 +122,20 @@ VALUES
 -- Vehicle types
 INSERT INTO vehicle_types (id, name, name_ar, description)
 VALUES
-  ('11111111-1111-1111-1111-111111111111', 'Sedan', 'سيدان', 'Passenger car'),
-  ('22222222-2222-2222-2222-222222222222', 'SUV', 'دفع رباعي', 'Sport utility vehicle');
+  (1, 'Sedan', 'سيدان', 'Passenger car'),
+  (2, 'SUV', 'دفع رباعي', 'Sport utility vehicle');
 
--- Makes
-INSERT INTO makes (name, name_ar)
+-- Makes (manual string IDs)
+INSERT INTO makes (id, name, name_ar)
 VALUES
-  ('Tesla', 'تسلا'),
-  ('Toyota', 'تويوتا');
+  ('TESLA', 'Tesla', 'تسلا'),
+  ('TOYOTA', 'Toyota', 'تويوتا');
 
--- Models (use generated make IDs after the previous insert)
+-- Models (use the manual make IDs above)
 INSERT INTO models (id, make_id, type_id, name, name_ar)
 VALUES
-  ('33333333-3333-3333-3333-333333333333', 1, '11111111-1111-1111-1111-111111111111', 'Model 3', 'موديل 3'),
-  ('44444444-4444-4444-4444-444444444444', 2, '22222222-2222-2222-2222-222222222222', 'RAV4', 'راف فور');
+  (100, 'TESLA', 1, 'Model 3', 'موديل 3'),
+  (200, 'TOYOTA', 2, 'RAV4', 'راف فور');
 
 -- ADP master rows
 INSERT INTO adp_master (id, adp_make_id, make_en_desc, make_ar_desc, adp_model_id, model_en_desc, model_ar_desc, adp_type_id, type_en_desc, type_ar_desc)
@@ -145,19 +146,19 @@ VALUES
 -- ADP make and type mappings
 INSERT INTO adp_make_mappings (id, adp_make_id, sd_make_id)
 VALUES
-  ('77777777-7777-7777-7777-777777777777', 'ADP-MAKE-001', 1),
-  ('88888888-8888-8888-8888-888888888888', 'ADP-MAKE-002', 2);
+  ('77777777-7777-7777-7777-777777777777', 'ADP-MAKE-001', 'TESLA'),
+  ('88888888-8888-8888-8888-888888888888', 'ADP-MAKE-002', 'TOYOTA');
 
 INSERT INTO adp_type_mappings (id, adp_type_id, sd_type_id)
 VALUES
-  ('99999999-9999-9999-9999-999999999999', 'ADP-TYPE-001', '11111111-1111-1111-1111-111111111111'),
-  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'ADP-TYPE-002', '22222222-2222-2222-2222-222222222222');
+  ('99999999-9999-9999-9999-999999999999', 'ADP-TYPE-001', 1),
+  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'ADP-TYPE-002', 2);
 
 -- ADP mappings
 INSERT INTO adp_mappings (id, adp_id, make_id, model_id, status, updated_by, reviewed_by)
 VALUES
-  ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', '55555555-5555-5555-5555-555555555555', 1, '33333333-3333-3333-3333-333333333333', 'MAPPED', 1, 2),
-  ('cccccccc-cccc-cccc-cccc-cccccccccccc', '66666666-6666-6666-6666-666666666666', 2, '44444444-4444-4444-4444-444444444444', 'MAPPED', 2, 1);
+  ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', '55555555-5555-5555-5555-555555555555', 'TESLA', 100, 'MAPPED', 1, 2),
+  ('cccccccc-cccc-cccc-cccc-cccccccccccc', '66666666-6666-6666-6666-666666666666', 'TOYOTA', 200, 'MAPPED', 2, 1);
 
 -- ADP mapping history
 INSERT INTO adp_mapping_history (id, adp_id, mapping_id, action, details, user_id)
