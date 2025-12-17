@@ -16,6 +16,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,7 +40,12 @@ public class ModelService {
         Make make = makeRepository.findById(request.getMakeId()).orElseThrow();
         VehicleType vehicleType = vehicleTypeRepository.findById(request.getTypeId()).orElseThrow();
 
+        if (modelRepository.existsById(request.getId())) {
+            throw new DataIntegrityViolationException("Model ID already exists");
+        }
+
         Model model = new Model();
+        model.setId(request.getId());
         model.setMake(make);
         model.setType(vehicleType);
         model.setName(request.getName());
@@ -48,8 +54,12 @@ public class ModelService {
         return modelRepository.save(model);
     }
 
-    public Model update(String id, ModelRequest request) {
+    public Model update(Long id, ModelRequest request) {
         Model existingModel = modelRepository.findById(id).orElseThrow();
+        if (request.getId() != null && !id.equals(request.getId())) {
+            throw new IllegalArgumentException("Model ID cannot be changed");
+        }
+
         Make make = makeRepository.findById(request.getMakeId()).orElseThrow();
         VehicleType vehicleType = vehicleTypeRepository.findById(request.getTypeId()).orElseThrow();
 
@@ -75,11 +85,13 @@ public class ModelService {
 
         List<Model> models = new ArrayList<>();
         Set<String> seenModels = new HashSet<>();
-        Map<Long, Make> makeCache = new HashMap<>();
-        Map<String, VehicleType> vehicleTypeCache = new HashMap<>();
+        Set<Long> seenIds = new HashSet<>();
+        Map<String, Make> makeCache = new HashMap<>();
+        Map<Long, VehicleType> vehicleTypeCache = new HashMap<>();
         int skipped = 0;
         int missingFields = 0;
         int duplicateModels = 0;
+        int duplicateIds = 0;
 
         List<String> skipReasons = new ArrayList<>();
 
@@ -88,6 +100,9 @@ public class ModelService {
             int recordNumber = i + 1;
 
             List<String> missingFieldNames = new ArrayList<>();
+            if (request == null || request.getId() == null) {
+                missingFieldNames.add("id");
+            }
             if (request == null || request.getMakeId() == null) {
                 missingFieldNames.add("makeId");
             }
@@ -120,13 +135,21 @@ public class ModelService {
                 continue;
             }
 
+            if (seenIds.contains(request.getId()) || modelRepository.existsById(request.getId())) {
+                skipped++;
+                duplicateIds++;
+                continue;
+            }
+
             Model model = new Model();
+            model.setId(request.getId());
             model.setMake(make);
             model.setType(vehicleType);
             model.setName(normalizedName);
             model.setNameAr(request.getNameAr());
             models.add(model);
             seenModels.add(uniqueKey);
+            seenIds.add(request.getId());
         }
 
         List<Model> savedModels = models.isEmpty() ? List.of() : modelRepository.saveAll(models);
@@ -137,6 +160,9 @@ public class ModelService {
         }
         if (missingFields > 0) {
             reasons.add(String.format("%d record(s) skipped because required fields were missing.", missingFields));
+        }
+        if (duplicateIds > 0) {
+            reasons.add(String.format("%d record(s) skipped because the model ID already exists.", duplicateIds));
         }
 
         String message;
@@ -156,7 +182,7 @@ public class ModelService {
     }
 
     @Transactional
-    public void deleteModel(String id) {
+    public void deleteModel(Long id) {
         Model model = modelRepository.findById(id).orElseThrow();
         adpMappingRepository.clearModelsFromMappings(java.util.List.of(model.getId()), LocalDateTime.now());
         modelRepository.delete(model);

@@ -1,34 +1,49 @@
 package com.slashdata.vehicleportal.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 public class ModelRequest {
 
     @NotNull
-    private Long makeId;
+    @Positive
+    private Long id;
 
     @NotNull
-    private String typeId;
+    private String makeId;
+
+    @NotNull
+    @Positive
+    private Long typeId;
 
     @NotBlank
     private String name;
 
     private String nameAr;
 
-    public Long getMakeId() {
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getMakeId() {
         return makeId;
     }
 
-    public void setMakeId(Long makeId) {
+    public void setMakeId(String makeId) {
         this.makeId = makeId;
     }
 
-    public String getTypeId() {
+    public Long getTypeId() {
         return typeId;
     }
 
-    public void setTypeId(String typeId) {
+    public void setTypeId(Long typeId) {
         this.typeId = typeId;
     }
 

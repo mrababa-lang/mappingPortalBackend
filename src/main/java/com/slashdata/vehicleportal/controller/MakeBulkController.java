@@ -104,11 +104,7 @@ public class MakeBulkController {
             }
             Make make = new Make();
             if (idIndex >= 0 && idIndex < values.length && !values[idIndex].isBlank()) {
-                try {
-                    make.setId(Long.parseLong(values[idIndex].trim()));
-                } catch (NumberFormatException ignored) {
-                    // If ID is invalid, proceed without setting it.
-                }
+                make.setId(values[idIndex].trim());
             }
             make.setName(values[nameIndex].trim());
             if (nameArIndex >= 0 && nameArIndex < values.length) {

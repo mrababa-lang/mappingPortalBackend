@@ -194,7 +194,7 @@ public class AdpMappingService {
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "ADP mapping not found"));
     }
 
-    private Make resolveMakeForStatus(MappingStatus status, Long makeId) {
+    private Make resolveMakeForStatus(MappingStatus status, String makeId) {
         switch (status) {
             case MAPPED:
                 if (makeId == null) {
@@ -215,7 +215,7 @@ public class AdpMappingService {
         }
     }
 
-    private Model resolveModelForStatus(MappingStatus status, String modelId) {
+    private Model resolveModelForStatus(MappingStatus status, Long modelId) {
         switch (status) {
             case MAPPED:
                 if (modelId == null) {
@@ -238,7 +238,7 @@ public class AdpMappingService {
         }
     }
 
-    private Make resolveMake(Long makeId) {
+    private Make resolveMake(String makeId) {
         if (makeId == null) {
             return null;
         }
@@ -246,7 +246,7 @@ public class AdpMappingService {
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Make not found"));
     }
 
-    private Model resolveModel(String modelId) {
+    private Model resolveModel(Long modelId) {
         if (modelId == null) {
             return null;
         }

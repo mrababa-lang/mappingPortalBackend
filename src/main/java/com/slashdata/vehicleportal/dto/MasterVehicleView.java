@@ -2,17 +2,17 @@ package com.slashdata.vehicleportal.dto;
 
 public class MasterVehicleView {
 
-    private final String modelId;
+    private final Long modelId;
     private final String modelName;
     private final String modelNameAr;
-    private final Long makeId;
+    private final String makeId;
     private final String makeName;
     private final String makeNameAr;
-    private final String typeId;
+    private final Long typeId;
     private final String typeName;
 
-    public MasterVehicleView(String modelId, String modelName, String modelNameAr, Long makeId, String makeName,
-                             String makeNameAr, String typeId, String typeName) {
+    public MasterVehicleView(Long modelId, String modelName, String modelNameAr, String makeId, String makeName,
+                             String makeNameAr, Long typeId, String typeName) {
         this.modelId = modelId;
         this.modelName = modelName;
         this.modelNameAr = modelNameAr;
@@ -23,7 +23,7 @@ public class MasterVehicleView {
         this.typeName = typeName;
     }
 
-    public String getModelId() {
+    public Long getModelId() {
         return modelId;
     }
 
@@ -35,7 +35,7 @@ public class MasterVehicleView {
         return modelNameAr;
     }
 
-    public Long getMakeId() {
+    public String getMakeId() {
         return makeId;
     }
 
@@ -47,7 +47,7 @@ public class MasterVehicleView {
         return makeNameAr;
     }
 
-    public String getTypeId() {
+    public Long getTypeId() {
         return typeId;
     }
 

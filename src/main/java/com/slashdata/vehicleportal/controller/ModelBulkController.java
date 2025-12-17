@@ -88,12 +88,13 @@ public class ModelBulkController {
         }
 
         String[] headers = lines[0].split(",");
+        int idIndex = findHeaderIndex(headers, "id");
         int makeIdIndex = findHeaderIndex(headers, "makeId", "make_id");
         int typeIdIndex = findHeaderIndex(headers, "typeId", "type_id");
         int nameIndex = findHeaderIndex(headers, "name");
         int nameArIndex = findHeaderIndex(headers, "nameAr", "name_ar", "name_arabic");
 
-        if (makeIdIndex < 0 || typeIdIndex < 0 || nameIndex < 0) {
+        if (idIndex < 0 || makeIdIndex < 0 || typeIdIndex < 0 || nameIndex < 0) {
             return List.of(new ModelRequest());
         }
 
@@ -104,19 +105,25 @@ public class ModelBulkController {
             }
 
             String[] values = lines[i].split(",");
-            if (values.length <= Math.max(makeIdIndex, Math.max(typeIdIndex, nameIndex))) {
+            if (values.length <= Math.max(idIndex, Math.max(makeIdIndex, Math.max(typeIdIndex, nameIndex)))) {
                 requests.add(new ModelRequest());
                 continue;
             }
 
             ModelRequest request = new ModelRequest();
             try {
-                request.setMakeId(Long.parseLong(values[makeIdIndex].trim()));
+                request.setId(Long.parseLong(values[idIndex].trim()));
             } catch (NumberFormatException ex) {
                 requests.add(request);
                 continue;
             }
-            request.setTypeId(values[typeIdIndex].trim());
+            request.setMakeId(values[makeIdIndex].trim());
+            try {
+                request.setTypeId(Long.parseLong(values[typeIdIndex].trim()));
+            } catch (NumberFormatException ex) {
+                requests.add(request);
+                continue;
+            }
             request.setName(values[nameIndex].trim());
             if (nameArIndex >= 0 && nameArIndex < values.length) {
                 request.setNameAr(values[nameArIndex].trim());

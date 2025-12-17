@@ -12,12 +12,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface ModelRepository extends JpaRepository<Model, String> {
+public interface ModelRepository extends JpaRepository<Model, Long> {
     List<Model> findByMake(Make make);
 
     boolean existsByMakeAndNameIgnoreCase(Make make, String name);
 
-    boolean existsByMakeAndNameIgnoreCaseAndIdNot(Make make, String name, String id);
+    boolean existsByMakeAndNameIgnoreCaseAndIdNot(Make make, String name, Long id);
 
     @Query("""
         select new com.slashdata.vehicleportal.dto.MasterVehicleView(
@@ -40,8 +40,8 @@ public interface ModelRepository extends JpaRepository<Model, String> {
         order by make.name, model.name
         """)
     Page<MasterVehicleView> findMasterVehicleViews(@Param("query") String query,
-                                                   @Param("makeId") Long makeId,
-                                                   @Param("typeId") String typeId,
+                                                   @Param("makeId") String makeId,
+                                                   @Param("typeId") Long typeId,
                                                    Pageable pageable);
 
     @Query("""
@@ -62,6 +62,6 @@ public interface ModelRepository extends JpaRepository<Model, String> {
           and (:typeId is null or type.id = :typeId)
         order by make.name, model.name
         """)
-    Stream<MasterVehicleExportRow> streamMasterVehiclesForExport(@Param("makeId") Long makeId,
-                                                                 @Param("typeId") String typeId);
+    Stream<MasterVehicleExportRow> streamMasterVehiclesForExport(@Param("makeId") String makeId,
+                                                                 @Param("typeId") Long typeId);
 }
