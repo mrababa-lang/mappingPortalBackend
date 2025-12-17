@@ -2,8 +2,10 @@ package com.slashdata.vehicleportal.controller;
 
 import com.slashdata.vehicleportal.dto.ApiResponse;
 import com.slashdata.vehicleportal.entity.MappingStatus;
+import com.slashdata.vehicleportal.repository.ADPMakeMappingRepository;
 import com.slashdata.vehicleportal.repository.ADPMappingRepository;
 import com.slashdata.vehicleportal.repository.ADPMasterRepository;
+import com.slashdata.vehicleportal.repository.ADPTypeMappingRepository;
 import com.slashdata.vehicleportal.repository.MakeRepository;
 import com.slashdata.vehicleportal.repository.ModelRepository;
 import com.slashdata.vehicleportal.repository.VehicleTypeRepository;
@@ -18,16 +20,24 @@ import org.springframework.web.bind.annotation.RestController;
 public class StatsController {
 
     private final ADPMasterRepository adpMasterRepository;
+    private final ADPMakeMappingRepository adpMakeMappingRepository;
     private final ADPMappingRepository adpMappingRepository;
+    private final ADPTypeMappingRepository adpTypeMappingRepository;
     private final MakeRepository makeRepository;
     private final ModelRepository modelRepository;
     private final VehicleTypeRepository vehicleTypeRepository;
 
     public StatsController(ADPMasterRepository adpMasterRepository,
-                           ADPMappingRepository adpMappingRepository, MakeRepository makeRepository,
-                           ModelRepository modelRepository, VehicleTypeRepository vehicleTypeRepository) {
+                           ADPMakeMappingRepository adpMakeMappingRepository,
+                           ADPMappingRepository adpMappingRepository,
+                           ADPTypeMappingRepository adpTypeMappingRepository,
+                           MakeRepository makeRepository,
+                           ModelRepository modelRepository,
+                           VehicleTypeRepository vehicleTypeRepository) {
         this.adpMasterRepository = adpMasterRepository;
+        this.adpMakeMappingRepository = adpMakeMappingRepository;
         this.adpMappingRepository = adpMappingRepository;
+        this.adpTypeMappingRepository = adpTypeMappingRepository;
         this.makeRepository = makeRepository;
         this.modelRepository = modelRepository;
         this.vehicleTypeRepository = vehicleTypeRepository;
@@ -41,6 +51,8 @@ public class StatsController {
         long adpTotalMakes = adpMasterRepository.countDistinctAdpMakeId();
         long adpTotalModels = adpMasterRepository.countDistinctAdpModelId();
         long adpTotalTypes = adpMasterRepository.countDistinctAdpTypeId();
+        long adpMappedMakes = adpMakeMappingRepository.countDistinctMappedAdpMakeId();
+        long adpMappedTypes = adpTypeMappingRepository.countDistinctMappedAdpTypeId();
         long adpTotal = adpMasterRepository.count();
         long mappedCount = adpMappingRepository.countByStatus(MappingStatus.MAPPED);
         long missingModelCount = adpMappingRepository.countByStatus(MappingStatus.MISSING_MODEL);
@@ -58,6 +70,8 @@ public class StatsController {
         stats.put("adpTotalMakes", adpTotalMakes);
         stats.put("adpTotalModels", adpTotalModels);
         stats.put("adpTotalTypes", adpTotalTypes);
+        stats.put("adpMappedMakes", adpMappedMakes);
+        stats.put("adpMappedTypes", adpMappedTypes);
         stats.put("mappedCount", mappedCount);
         stats.put("unmappedCount", unmappedCount);
         stats.put("missingModelCount", missingModelCount);
