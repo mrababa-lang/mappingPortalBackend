@@ -34,7 +34,7 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 @PreAuthorize("isAuthenticated()")
 public class ADPMappedVehiclesController {
 
-    private static final List<MappingStatus> MAPPED_STATUSES = List.of(MappingStatus.MAPPED, MappingStatus.MISSING_MODEL);
+    private static final List<MappingStatus> MAPPED_STATUSES = List.of(MappingStatus.MAPPED);
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
     private final ADPMappingRepository adpMappingRepository;

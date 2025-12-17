@@ -49,14 +49,16 @@ public class ADPMappingController {
     public ApiResponse<?> search(@RequestParam(value = "q", required = false) String query,
                                  @RequestParam(value = "reviewStatus", required = false, defaultValue = "all") String reviewStatus,
                                  @RequestParam(value = "mappingType", required = false, defaultValue = "all") String mappingType,
+                                 @RequestParam(value = "status", required = false) String status,
                                  @RequestParam(value = "userId", required = false) Long userId,
                                  @RequestParam(value = "dateFrom", required = false)
                                  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
                                  @RequestParam(value = "dateTo", required = false)
                                  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
                                  Pageable pageable) {
-        boolean unmappedOnly = isUnmapped(mappingType);
-        MappingStatus mappingStatus = parseMappingStatus(mappingType);
+        String normalizedMappingType = status != null ? status : mappingType;
+        boolean unmappedOnly = isUnmapped(normalizedMappingType);
+        MappingStatus mappingStatus = parseMappingStatus(normalizedMappingType);
         String normalizedReviewStatus = normalizeReviewStatus(reviewStatus);
         LocalDateTime from = dateFrom != null ? dateFrom.atStartOfDay() : null;
         LocalDateTime to = dateTo != null ? dateTo.plusDays(1).atStartOfDay().minusNanos(1) : null;
