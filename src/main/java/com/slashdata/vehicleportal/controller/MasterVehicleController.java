@@ -37,8 +37,8 @@ public class MasterVehicleController {
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_USER', 'MAPPING_ADMIN')")
     public ApiResponse<?> list(@RequestParam(value = "q", required = false) String query,
-                               @RequestParam(value = "makeId", required = false) Long makeId,
-                               @RequestParam(value = "typeId", required = false) String typeId,
+                               @RequestParam(value = "makeId", required = false) String makeId,
+                               @RequestParam(value = "typeId", required = false) Long typeId,
                                Pageable pageable) {
         Page<MasterVehicleView> page = modelRepository.findMasterVehicleViews(normalizeQuery(query), makeId,
             normalizeTypeId(typeId), pageable);
@@ -49,8 +49,8 @@ public class MasterVehicleController {
     @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_USER', 'MAPPING_ADMIN')")
     @Transactional(readOnly = true)
     public ResponseEntity<StreamingResponseBody> exportCsv(
-        @RequestParam(value = "makeId", required = false) Long makeId,
-        @RequestParam(value = "typeId", required = false) String typeId,
+        @RequestParam(value = "makeId", required = false) String makeId,
+        @RequestParam(value = "typeId", required = false) Long typeId,
         @RequestParam(value = "format", defaultValue = "csv") String format) {
 
         if (!"csv".equalsIgnoreCase(format)) {
@@ -81,12 +81,8 @@ public class MasterVehicleController {
         return trimmed.isEmpty() ? null : trimmed;
     }
 
-    private String normalizeTypeId(String typeId) {
-        if (typeId == null) {
-            return null;
-        }
-        String trimmed = typeId.trim();
-        return trimmed.isEmpty() ? null : trimmed;
+    private Long normalizeTypeId(Long typeId) {
+        return typeId;
     }
 
     private void writeCsvHeader(PrintWriter writer) {

@@ -10,9 +10,9 @@ public class AdpMappingViewDto {
     private String modelEnDesc;
     private String typeEnDesc;
     private String status;
-    private Long sdMakeId;
+    private String sdMakeId;
     private String sdMakeName;
-    private String sdModelId;
+    private Long sdModelId;
     private String sdModelName;
     private Long updatedBy;
     private String updatedByName;
@@ -22,7 +22,7 @@ public class AdpMappingViewDto {
     private String reviewedByName;
 
     public AdpMappingViewDto(String adpId, String makeEnDesc, String modelEnDesc, String typeEnDesc,
-                             MappingStatus status, Long sdMakeId, String sdMakeName, String sdModelId,
+                             MappingStatus status, String sdMakeId, String sdMakeName, Long sdModelId,
                              String sdModelName, Long updatedBy, String updatedByName, LocalDateTime updatedAt,
                              LocalDateTime reviewedAt, Long reviewedBy, String reviewedByName) {
         this.adpId = adpId;
@@ -82,11 +82,11 @@ public class AdpMappingViewDto {
         this.status = status;
     }
 
-    public Long getSdMakeId() {
+    public String getSdMakeId() {
         return sdMakeId;
     }
 
-    public void setSdMakeId(Long sdMakeId) {
+    public void setSdMakeId(String sdMakeId) {
         this.sdMakeId = sdMakeId;
     }
 
@@ -98,11 +98,11 @@ public class AdpMappingViewDto {
         this.sdMakeName = sdMakeName;
     }
 
-    public String getSdModelId() {
+    public Long getSdModelId() {
         return sdModelId;
     }
 
-    public void setSdModelId(String sdModelId) {
+    public void setSdModelId(Long sdModelId) {
         this.sdModelId = sdModelId;
     }
 

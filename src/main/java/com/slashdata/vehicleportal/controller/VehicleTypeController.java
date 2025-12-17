@@ -34,7 +34,8 @@ public class VehicleTypeController {
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_ADMIN')")
     public ResponseEntity<ApiResponse<VehicleType>> create(@Valid @RequestBody VehicleType vehicleType) {
-        if (vehicleTypeRepository.existsByNameIgnoreCase(vehicleType.getName())) {
+        if (vehicleTypeRepository.existsById(vehicleType.getId())
+            || vehicleTypeRepository.existsByNameIgnoreCase(vehicleType.getName())) {
             return ResponseEntity.badRequest().body(ApiResponse.of(null));
         }
         return ResponseEntity.ok(ApiResponse.of(vehicleTypeRepository.save(vehicleType)));
@@ -42,8 +43,11 @@ public class VehicleTypeController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_ADMIN')")
-    public ResponseEntity<ApiResponse<VehicleType>> update(@PathVariable String id,
+    public ResponseEntity<ApiResponse<VehicleType>> update(@PathVariable Long id,
                                                            @Valid @RequestBody VehicleType vehicleType) {
+        if (vehicleType.getId() != null && !id.equals(vehicleType.getId())) {
+            return ResponseEntity.badRequest().body(ApiResponse.of(null));
+        }
         if (vehicleTypeRepository.existsByNameIgnoreCaseAndIdNot(vehicleType.getName(), id)) {
             return ResponseEntity.badRequest().body(ApiResponse.of(null));
         }
@@ -58,7 +62,7 @@ public class VehicleTypeController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_ADMIN')")
-    public ResponseEntity<Void> delete(@PathVariable String id) {
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         vehicleTypeRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }

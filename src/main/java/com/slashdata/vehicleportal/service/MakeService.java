@@ -32,11 +32,17 @@ public class MakeService {
         if (makeRepository.existsByNameIgnoreCase(make.getName())) {
             throw new DataIntegrityViolationException("Make name already exists");
         }
+        if (makeRepository.existsById(make.getId())) {
+            throw new DataIntegrityViolationException("Make ID already exists");
+        }
         return makeRepository.save(make);
     }
 
-    public Make update(Long id, Make updatedMake) {
+    public Make update(String id, Make updatedMake) {
         Make existingMake = makeRepository.findById(id).orElseThrow();
+        if (updatedMake.getId() != null && !id.equals(updatedMake.getId())) {
+            throw new DataIntegrityViolationException("Make ID cannot be changed");
+        }
         String normalizedName = updatedMake.getName();
         if (normalizedName != null && makeRepository.existsByNameIgnoreCaseAndIdNot(normalizedName, id)) {
             throw new DataIntegrityViolationException("Make name already exists");
@@ -60,9 +66,12 @@ public class MakeService {
 
         List<Make> makesToSave = new ArrayList<>();
         Set<String> seenNames = new HashSet<>();
+        Set<String> seenIds = new HashSet<>();
         int skipped = 0;
         int duplicateNames = 0;
+        int duplicateIds = 0;
         int invalidNames = 0;
+        int invalidIds = 0;
 
         List<String> skipReasons = new ArrayList<>();
 
@@ -71,21 +80,35 @@ public class MakeService {
             int recordNumber = i + 1;
 
             List<String> missingFields = new ArrayList<>();
+            if (make == null || make.getId() == null || make.getId().trim().isEmpty()) {
+                missingFields.add("id");
+            }
             if (make == null || make.getName() == null || make.getName().trim().isEmpty()) {
                 missingFields.add("name");
             }
 
             if (!missingFields.isEmpty()) {
                 skipped++;
-                invalidNames++;
+                if (missingFields.contains("id")) {
+                    invalidIds++;
+                }
+                if (missingFields.contains("name")) {
+                    invalidNames++;
+                }
                 skipReasons.add(String.format("Record %d missing required field(s): %s", recordNumber,
                     String.join(", ", missingFields)));
                 continue;
             }
 
+            String normalizedId = make.getId().trim();
             String normalizedName = make.getName().trim();
             String normalizedKey = normalizedName.toLowerCase();
 
+            if (seenIds.contains(normalizedId) || makeRepository.existsById(normalizedId)) {
+                skipped++;
+                duplicateIds++;
+                continue;
+            }
             if (seenNames.contains(normalizedKey) || makeRepository.existsByNameIgnoreCase(normalizedName)) {
                 skipped++;
                 duplicateNames++;
@@ -93,10 +116,11 @@ public class MakeService {
             }
 
             Make newMake = new Make();
-            newMake.setId(make.getId());
+            newMake.setId(normalizedId);
             newMake.setName(normalizedName);
             newMake.setNameAr(make.getNameAr());
             makesToSave.add(newMake);
+            seenIds.add(normalizedId);
             seenNames.add(normalizedKey);
         }
 
@@ -108,6 +132,12 @@ public class MakeService {
         }
         if (invalidNames > 0) {
             reasons.add(String.format("%d record(s) skipped because the make name was missing.", invalidNames));
+        }
+        if (duplicateIds > 0) {
+            reasons.add(String.format("%d record(s) skipped because the make ID already exists.", duplicateIds));
+        }
+        if (invalidIds > 0) {
+            reasons.add(String.format("%d record(s) skipped because the make ID was missing.", invalidIds));
         }
 
         String message;
@@ -127,7 +157,7 @@ public class MakeService {
     }
 
     @Transactional
-    public void deleteMake(Long id) {
+    public void deleteMake(String id) {
         Make make = makeRepository.findById(id).orElseThrow();
         List<Model> models = modelRepository.findByMake(make);
         LocalDateTime now = LocalDateTime.now();

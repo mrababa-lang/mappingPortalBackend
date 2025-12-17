@@ -2,8 +2,6 @@ package com.slashdata.vehicleportal.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -15,9 +13,8 @@ import jakarta.persistence.UniqueConstraint;
 public class Model {
 
     @Id
-    @Column(length = 36, columnDefinition = "char(36)")
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+    @Column(name = "id", columnDefinition = "INT UNSIGNED")
+    private Long id;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "make_id")
@@ -33,11 +30,11 @@ public class Model {
     @Column(name = "name_ar", length = 100)
     private String nameAr;
 
-    public String getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

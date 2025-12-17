@@ -48,7 +48,7 @@ public class ModelController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_ADMIN')")
-    public ResponseEntity<ApiResponse<Model>> update(@PathVariable String id, @Valid @RequestBody ModelRequest request) {
+    public ResponseEntity<ApiResponse<Model>> update(@PathVariable Long id, @Valid @RequestBody ModelRequest request) {
         try {
             return ResponseEntity.ok(ApiResponse.of(modelService.update(id, request)));
         } catch (DataIntegrityViolationException | IllegalArgumentException ex) {
@@ -58,7 +58,7 @@ public class ModelController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_ADMIN')")
-    public ResponseEntity<Void> delete(@PathVariable String id) {
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         modelService.deleteModel(id);
         return ResponseEntity.noContent().build();
     }

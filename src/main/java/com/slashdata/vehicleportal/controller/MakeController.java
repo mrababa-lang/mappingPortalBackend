@@ -44,7 +44,7 @@ public class MakeController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_ADMIN')")
-    public ResponseEntity<ApiResponse<Make>> update(@PathVariable Long id, @Valid @RequestBody Make make) {
+    public ResponseEntity<ApiResponse<Make>> update(@PathVariable String id, @Valid @RequestBody Make make) {
         try {
             return ResponseEntity.ok(ApiResponse.of(makeService.update(id, make)));
         } catch (DataIntegrityViolationException ex) {
@@ -54,7 +54,7 @@ public class MakeController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_ADMIN')")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable String id) {
         makeService.deleteMake(id);
         return ResponseEntity.noContent().build();
     }
