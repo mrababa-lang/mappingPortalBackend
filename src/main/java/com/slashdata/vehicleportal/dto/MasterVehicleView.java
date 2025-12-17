@@ -8,11 +8,11 @@ public class MasterVehicleView {
     private final Long makeId;
     private final String makeName;
     private final String makeNameAr;
-    private final Long typeId;
+    private final String typeId;
     private final String typeName;
 
     public MasterVehicleView(String modelId, String modelName, String modelNameAr, Long makeId, String makeName,
-                             String makeNameAr, Long typeId, String typeName) {
+                             String makeNameAr, String typeId, String typeName) {
         this.modelId = modelId;
         this.modelName = modelName;
         this.modelNameAr = modelNameAr;
@@ -47,7 +47,7 @@ public class MasterVehicleView {
         return makeNameAr;
     }
 
-    public Long getTypeId() {
+    public String getTypeId() {
         return typeId;
     }
 
