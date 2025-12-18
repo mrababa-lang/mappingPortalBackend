@@ -61,6 +61,7 @@ public interface ADPMappingRepository extends JpaRepository<ADPMapping, String>,
           )
           and (
               :reviewStatus = 'all'
+              or (mapping.id is null and :unmappedOnly = true)
               or (mapping.id is not null and (
                   (:reviewStatus = 'pending' and mapping.reviewedAt is null)
                   or (:reviewStatus = 'reviewed' and mapping.reviewedAt is not null)
