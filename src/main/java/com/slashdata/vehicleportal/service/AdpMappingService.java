@@ -118,7 +118,14 @@ public class AdpMappingService {
         mapping.setModel(desiredModel);
         mapping.setStatus(desiredStatus);
         mapping.setAiConfidence(request.getConfidence());
-        if (dataChanged) {
+        mapping.setMatchingEngine(request.getMatchingEngine());
+        mapping.setAutoPropagated(request.getAutoPropagated());
+
+        boolean aiDriven = request.getConfidence() != null
+            || request.getMatchingEngine() != null
+            || Boolean.TRUE.equals(request.getAutoPropagated());
+
+        if (dataChanged || aiDriven) {
             mapping.setReviewedAt(null);
             mapping.setReviewedBy(null);
         }
@@ -128,7 +135,7 @@ public class AdpMappingService {
         }
 
         ADPMapping saved = adpMappingRepository.save(mapping);
-        persistHistory(saved, actor, "MANUAL_UPDATE");
+        persistHistory(saved, actor, aiDriven ? "AI_MAPPED" : "MANUAL_UPDATE");
         dashboardStatsService.recalculateDashboardAsync();
         return saved;
     }
@@ -289,6 +296,9 @@ public class AdpMappingService {
     private String buildDetails(ADPMapping mapping) {
         String makeName = mapping.getMake() != null ? mapping.getMake().getName() : "(none)";
         String modelName = mapping.getModel() != null ? mapping.getModel().getName() : "(none)";
-        return String.format("Status=%s, Make=%s, Model=%s", mapping.getStatus(), makeName, modelName);
+        String engine = mapping.getMatchingEngine() != null ? mapping.getMatchingEngine() : "(not set)";
+        String auto = mapping.getAutoPropagated() != null && mapping.getAutoPropagated() ? "auto" : "manual";
+        return String.format("Status=%s, Make=%s, Model=%s, Engine=%s, Propagation=%s",
+            mapping.getStatus(), makeName, modelName, engine, auto);
     }
 }

@@ -6,12 +6,22 @@ public class AiBatchMatchResult {
     private int suggestionsCreated;
     private int highConfidenceApplied;
     private String promptPreview;
+    private java.util.List<AiBatchSuggestion> suggestions;
 
     public AiBatchMatchResult(int totalCandidates, int suggestionsCreated, int highConfidenceApplied,
                               String promptPreview) {
         this.totalCandidates = totalCandidates;
         this.suggestionsCreated = suggestionsCreated;
         this.highConfidenceApplied = highConfidenceApplied;
+        this.promptPreview = promptPreview;
+    }
+
+    public AiBatchMatchResult(java.util.List<AiBatchSuggestion> suggestions, int totalCandidates,
+                              String promptPreview) {
+        this.suggestions = suggestions;
+        this.totalCandidates = totalCandidates;
+        this.suggestionsCreated = suggestions != null ? suggestions.size() : 0;
+        this.highConfidenceApplied = 0;
         this.promptPreview = promptPreview;
     }
 
@@ -45,5 +55,13 @@ public class AiBatchMatchResult {
 
     public void setPromptPreview(String promptPreview) {
         this.promptPreview = promptPreview;
+    }
+
+    public java.util.List<AiBatchSuggestion> getSuggestions() {
+        return suggestions;
+    }
+
+    public void setSuggestions(java.util.List<AiBatchSuggestion> suggestions) {
+        this.suggestions = suggestions;
     }
 }

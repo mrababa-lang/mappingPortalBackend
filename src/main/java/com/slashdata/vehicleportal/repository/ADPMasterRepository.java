@@ -146,4 +146,12 @@ public interface ADPMasterRepository extends JpaRepository<ADPMaster, String>, J
         )
         """)
     List<ADPMaster> findUnmappedRecords();
+
+    @Query("""
+        select master from ADPMaster master
+        where not exists (
+            select 1 from ADPMapping mapping where mapping.adpMaster.id = master.id
+        )
+        """)
+    Page<ADPMaster> findUnmappedRecords(Pageable pageable);
 }

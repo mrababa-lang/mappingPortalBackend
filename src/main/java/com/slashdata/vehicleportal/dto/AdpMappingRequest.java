@@ -8,6 +8,8 @@ public class AdpMappingRequest {
     private String makeId;
     private Long modelId;
     private Integer confidence;
+    private String matchingEngine;
+    private Boolean autoPropagated;
 
     @NotNull
     private MappingStatus status;
@@ -34,6 +36,22 @@ public class AdpMappingRequest {
 
     public void setConfidence(Integer confidence) {
         this.confidence = confidence;
+    }
+
+    public String getMatchingEngine() {
+        return matchingEngine;
+    }
+
+    public void setMatchingEngine(String matchingEngine) {
+        this.matchingEngine = matchingEngine;
+    }
+
+    public Boolean getAutoPropagated() {
+        return autoPropagated;
+    }
+
+    public void setAutoPropagated(Boolean autoPropagated) {
+        this.autoPropagated = autoPropagated;
     }
 
     public MappingStatus getStatus() {
