@@ -53,6 +53,12 @@ public class ADPMapping {
     @Column(name = "ai_confidence")
     private Integer aiConfidence;
 
+    @Column(name = "matching_engine", length = 50)
+    private String matchingEngine;
+
+    @Column(name = "auto_propagated")
+    private Boolean autoPropagated;
+
     public String getId() {
         return id;
     }
@@ -131,5 +137,21 @@ public class ADPMapping {
 
     public void setAiConfidence(Integer aiConfidence) {
         this.aiConfidence = aiConfidence;
+    }
+
+    public String getMatchingEngine() {
+        return matchingEngine;
+    }
+
+    public void setMatchingEngine(String matchingEngine) {
+        this.matchingEngine = matchingEngine;
+    }
+
+    public Boolean getAutoPropagated() {
+        return autoPropagated;
+    }
+
+    public void setAutoPropagated(Boolean autoPropagated) {
+        this.autoPropagated = autoPropagated;
     }
 }

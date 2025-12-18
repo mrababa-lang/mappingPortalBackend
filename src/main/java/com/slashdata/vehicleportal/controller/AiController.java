@@ -1,5 +1,6 @@
 package com.slashdata.vehicleportal.controller;
 
+import com.slashdata.vehicleportal.dto.AiBatchMatchRequest;
 import com.slashdata.vehicleportal.dto.AiBatchMatchResult;
 import com.slashdata.vehicleportal.dto.ApiResponse;
 import com.slashdata.vehicleportal.entity.User;
@@ -50,9 +51,10 @@ public class AiController {
     }
 
     @PostMapping("/batch-match")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_ADMIN')")
-    public ApiResponse<AiBatchMatchResult> batchMatch(Principal principal) {
+    @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_ADMIN', 'MAPPING_USER')")
+    public ApiResponse<AiBatchMatchResult> batchMatch(@RequestBody AiBatchMatchRequest request,
+                                                      Principal principal) {
         User actor = adpMappingService.findUser(principal != null ? principal.getName() : null);
-        return ApiResponse.of(aiBatchMatchingService.processBatchMatching(actor));
+        return ApiResponse.of(aiBatchMatchingService.processBatchMatching(actor, request));
     }
 }
