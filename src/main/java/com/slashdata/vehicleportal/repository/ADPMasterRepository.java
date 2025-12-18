@@ -138,4 +138,12 @@ public interface ADPMasterRepository extends JpaRepository<ADPMaster, String>, J
         nativeQuery = true)
     Stream<AdpTypeExportRow> streamUniqueTypesForExport(@Param("q") String query,
                                                        @Param("status") String status);
+
+    @Query("""
+        select master from ADPMaster master
+        where not exists (
+            select 1 from ADPMapping mapping where mapping.adpMaster.id = master.id
+        )
+        """)
+    List<ADPMaster> findUnmappedRecords();
 }

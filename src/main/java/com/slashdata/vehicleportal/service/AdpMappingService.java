@@ -117,6 +117,7 @@ public class AdpMappingService {
         mapping.setMake(desiredMake);
         mapping.setModel(desiredModel);
         mapping.setStatus(desiredStatus);
+        mapping.setAiConfidence(request.getConfidence());
         if (dataChanged) {
             mapping.setReviewedAt(null);
             mapping.setReviewedBy(null);
@@ -127,7 +128,7 @@ public class AdpMappingService {
         }
 
         ADPMapping saved = adpMappingRepository.save(mapping);
-        persistHistory(saved, actor, isNew ? "CREATED" : "UPDATED");
+        persistHistory(saved, actor, "MANUAL_UPDATE");
         dashboardStatsService.recalculateDashboardAsync();
         return saved;
     }

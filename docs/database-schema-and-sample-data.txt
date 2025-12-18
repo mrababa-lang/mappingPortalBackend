@@ -76,6 +76,7 @@ CREATE TABLE adp_mappings (
     adp_id CHAR(36) NOT NULL,
     make_id VARCHAR(50),
     model_id INT UNSIGNED,
+    ai_confidence INT UNSIGNED,
     status VARCHAR(20) NOT NULL DEFAULT 'MAPPED',
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_by BIGINT,

@@ -1,8 +1,14 @@
 package com.slashdata.vehicleportal.controller;
 
+import com.slashdata.vehicleportal.dto.AiBatchMatchResult;
 import com.slashdata.vehicleportal.dto.ApiResponse;
+import com.slashdata.vehicleportal.entity.User;
+import com.slashdata.vehicleportal.service.AdpMappingService;
+import com.slashdata.vehicleportal.service.AiBatchMatchingService;
+import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -11,6 +17,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/ai")
 public class AiController {
+
+    private final AiBatchMatchingService aiBatchMatchingService;
+    private final AdpMappingService adpMappingService;
+
+    public AiController(AiBatchMatchingService aiBatchMatchingService, AdpMappingService adpMappingService) {
+        this.aiBatchMatchingService = aiBatchMatchingService;
+        this.adpMappingService = adpMappingService;
+    }
 
     @PostMapping("/suggest-mapping")
     public ApiResponse<Map<String, Object>> suggestMapping(@RequestBody Map<String, Object> payload) {
@@ -33,5 +47,12 @@ public class AiController {
         Map<String, Object> response = new HashMap<>();
         response.put("description", payload.getOrDefault("name", ""));
         return ApiResponse.of(response);
+    }
+
+    @PostMapping("/batch-match")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_ADMIN')")
+    public ApiResponse<AiBatchMatchResult> batchMatch(Principal principal) {
+        User actor = adpMappingService.findUser(principal != null ? principal.getName() : null);
+        return ApiResponse.of(aiBatchMatchingService.processBatchMatching(actor));
     }
 }

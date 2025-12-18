@@ -7,6 +7,7 @@ public class AdpMappingRequest {
 
     private String makeId;
     private Long modelId;
+    private Integer confidence;
 
     @NotNull
     private MappingStatus status;
@@ -25,6 +26,14 @@ public class AdpMappingRequest {
 
     public void setModelId(Long modelId) {
         this.modelId = modelId;
+    }
+
+    public Integer getConfidence() {
+        return confidence;
+    }
+
+    public void setConfidence(Integer confidence) {
+        this.confidence = confidence;
     }
 
     public MappingStatus getStatus() {
