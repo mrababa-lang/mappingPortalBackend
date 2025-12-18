@@ -313,6 +313,59 @@
       ]
     },
     {
+      "name": "AI Matching",
+      "component": "AIMatching.tsx",
+      "endpoints": [
+        {
+          "title": "Get Unmapped Records",
+          "method": "GET",
+          "path": "/api/adp/mappings",
+          "requestParams": [
+            "page",
+            "size",
+            "mappingType=unmapped",
+            "q (optional search)"
+          ],
+          "responses": {
+            "200": {
+              "content": [
+                {
+                  "adpId": "RAW-123",
+                  "makeEnDesc": "TOYOTA",
+                  "modelEnDesc": "CAMRY",
+                  "typeEnDesc": "SEDAN"
+                }
+              ],
+              "page": 0,
+              "size": 20,
+              "totalPages": 1,
+              "totalElements": 1
+            }
+          }
+        },
+        {
+          "title": "Upsert Mapping",
+          "method": "PUT",
+          "path": "/api/adp/mappings/{adpId}",
+          "requestBody": {
+            "status": "MAPPED",
+            "makeId": "TOY",
+            "modelId": "CAMRY",
+            "note": "modelId is optional when status is MISSING_MODEL"
+          }
+        },
+        {
+          "title": "AI Suggestion",
+          "method": "POST",
+          "path": "/api/ai/suggest-mapping",
+          "requestBody": { "description": "TOYOTA CAMRY 2023 SEDAN" },
+          "responses": {
+            "200": { "make": "Toyota", "model": "Camry", "confidence": 0.92 }
+          }
+        }
+      ]
+    },
+    {
       "name": "ADP Makes - Unique",
       "component": "ADPMakes.tsx",
       "endpoints": [
