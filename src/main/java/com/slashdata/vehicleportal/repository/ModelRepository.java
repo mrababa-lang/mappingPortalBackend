@@ -19,6 +19,8 @@ public interface ModelRepository extends JpaRepository<Model, Long> {
 
     boolean existsByMakeAndNameIgnoreCaseAndIdNot(Make make, String name, Long id);
 
+    List<Model> findByMakeAndNameIgnoreCase(Make make, String name);
+
     @Query("""
         select new com.slashdata.vehicleportal.dto.MasterVehicleView(
             model.id,

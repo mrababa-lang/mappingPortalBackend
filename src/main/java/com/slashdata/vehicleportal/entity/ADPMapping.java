@@ -50,6 +50,9 @@ public class ADPMapping {
     @JoinColumn(name = "reviewed_by")
     private User reviewedBy;
 
+    @Column(name = "ai_confidence")
+    private Integer aiConfidence;
+
     public String getId() {
         return id;
     }
@@ -120,5 +123,13 @@ public class ADPMapping {
 
     public void setReviewedBy(User reviewedBy) {
         this.reviewedBy = reviewedBy;
+    }
+
+    public Integer getAiConfidence() {
+        return aiConfidence;
+    }
+
+    public void setAiConfidence(Integer aiConfidence) {
+        this.aiConfidence = aiConfidence;
     }
 }

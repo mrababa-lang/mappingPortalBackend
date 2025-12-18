@@ -7,4 +7,6 @@ public interface MakeRepository extends JpaRepository<Make, String> {
     boolean existsByNameIgnoreCase(String name);
 
     boolean existsByNameIgnoreCaseAndIdNot(String name, String id);
+
+    java.util.Optional<Make> findByNameIgnoreCase(String name);
 }
