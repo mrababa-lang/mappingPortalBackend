@@ -24,6 +24,8 @@ public interface ADPMasterRepository extends JpaRepository<ADPMaster, String>, J
 
     Optional<ADPMaster> findByAdpMakeIdAndAdpModelId(String adpMakeId, String adpModelId);
 
+    Optional<ADPMaster> findByAdpMakeIdAndAdpModelIdAndAdpTypeId(String adpMakeId, String adpModelId, String adpTypeId);
+
     @Query(value = """
         SELECT am.adp_make_id AS adpMakeId,
                MAX(am.make_en_desc) AS adpMakeName,
