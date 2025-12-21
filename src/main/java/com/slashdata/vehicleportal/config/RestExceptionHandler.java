@@ -16,7 +16,7 @@ public class RestExceptionHandler {
         "/api/makes/bulk", "application/json, text/csv",
         "/api/models/bulk", "application/json, text/csv",
         "/api/adp/master/upload", "application/json, text/csv",
-        "/api/adp/master/bulk-upload", "multipart/form-data"
+        "/api/adp/master/bulk-upload", "application/json"
     );
 
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class)

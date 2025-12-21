@@ -28,9 +28,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/adp")
@@ -99,9 +97,9 @@ public class AdpPublicController {
         return ResponseEntity.ok(ApiResponse.of(records));
     }
 
-    @PostMapping(value = "/master/bulk-upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ApiResponse<AdpMasterBulkUploadResponse> bulkUpload(@RequestParam("file") MultipartFile file) {
-        return ApiResponse.of(adpMasterService.bulkUpload(file));
+    @PostMapping(value = "/master/bulk-upload", consumes = "application/json")
+    public ApiResponse<AdpMasterBulkUploadResponse> bulkUpload(@RequestBody List<Map<String, Object>> payload) {
+        return ApiResponse.of(adpMasterService.bulkUpload(payload));
     }
 
     private List<AdpAttributeDto> extractDistinctAttributes(AttributeSelector selector) {
