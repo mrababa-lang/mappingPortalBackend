@@ -47,19 +47,19 @@ public class AdpMasterService {
         "kindArDesc"
     );
 
-    private static final Map<String, Set<String>> COLUMN_ALIASES = Map.of(
-        "adpMakeId", Set.of("make code", "make_id", "makeid", "adpmakeid"),
-        "makeEnDesc", Set.of("desc en", "make_en", "makedescription", "makeendesc"),
-        "makeArDesc", Set.of("desc ar", "make_ar", "makeardesc"),
-        "adpModelId", Set.of("model code", "model_id", "adpmodelid"),
-        "modelEnDesc", Set.of("model desc en", "modelendesc"),
-        "modelArDesc", Set.of("model desc ar", "modelardesc"),
-        "adpTypeId", Set.of("type code", "type_id", "adptypeid"),
-        "typeEnDesc", Set.of("type desc en", "typeendesc"),
-        "typeArDesc", Set.of("type desc ar", "typeardesc"),
-        "kindCode", Set.of("kind code", "kindcode"),
-        "kindEnDesc", Set.of("kind desc en", "kindendesc"),
-        "kindArDesc", Set.of("kind desc ar", "kindardesc")
+    private static final Map<String, Set<String>> COLUMN_ALIASES = Map.ofEntries(
+        Map.entry("adpMakeId", Set.of("make code", "make_id", "makeid", "adpmakeid")),
+        Map.entry("makeEnDesc", Set.of("desc en", "make_en", "makedescription", "makeendesc")),
+        Map.entry("makeArDesc", Set.of("desc ar", "make_ar", "makeardesc")),
+        Map.entry("adpModelId", Set.of("model code", "model_id", "adpmodelid")),
+        Map.entry("modelEnDesc", Set.of("model desc en", "modelendesc")),
+        Map.entry("modelArDesc", Set.of("model desc ar", "modelardesc")),
+        Map.entry("adpTypeId", Set.of("type code", "type_id", "adptypeid")),
+        Map.entry("typeEnDesc", Set.of("type desc en", "typeendesc")),
+        Map.entry("typeArDesc", Set.of("type desc ar", "typeardesc")),
+        Map.entry("kindCode", Set.of("kind code", "kindcode")),
+        Map.entry("kindEnDesc", Set.of("kind desc en", "kindendesc")),
+        Map.entry("kindArDesc", Set.of("kind desc ar", "kindardesc"))
     );
 
     private final ADPMasterRepository adpMasterRepository;
