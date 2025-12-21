@@ -2,18 +2,12 @@ package com.slashdata.vehicleportal.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.MappingIterator;
-import com.fasterxml.jackson.dataformat.csv.CsvMapper;
-import com.fasterxml.jackson.dataformat.csv.CsvParser;
-import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import com.slashdata.vehicleportal.dto.AdpMasterBulkSyncResponse;
 import com.slashdata.vehicleportal.dto.AdpMasterBulkUploadResponse;
 import com.slashdata.vehicleportal.entity.ADPHistory;
 import com.slashdata.vehicleportal.entity.ADPMaster;
 import com.slashdata.vehicleportal.repository.ADPHistoryRepository;
 import com.slashdata.vehicleportal.repository.ADPMasterRepository;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,28 +18,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class AdpMasterService {
 
     private static final Logger logger = LoggerFactory.getLogger(AdpMasterService.class);
-
-    private static final List<String> DEFAULT_COLUMNS = List.of(
-        "adpMakeId",
-        "makeEnDesc",
-        "makeArDesc",
-        "adpModelId",
-        "modelEnDesc",
-        "modelArDesc",
-        "adpTypeId",
-        "typeEnDesc",
-        "typeArDesc",
-        "kindCode",
-        "kindEnDesc",
-        "kindArDesc"
-    );
 
     private static final Map<String, Set<String>> COLUMN_ALIASES = Map.ofEntries(
         Map.entry("adpMakeId", Set.of("adpmakeid", "makecode", "makeid")),
@@ -134,9 +112,9 @@ public class AdpMasterService {
         return new AdpMasterBulkSyncResponse(added, skipped, message);
     }
 
-    public AdpMasterBulkUploadResponse bulkUpload(MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No file provided for upload");
+    public AdpMasterBulkUploadResponse bulkUpload(List<Map<String, Object>> rows) {
+        if (rows == null || rows.isEmpty()) {
+            return new AdpMasterBulkUploadResponse(0, 0, 0, "No records provided.");
         }
 
         int added = 0;
@@ -144,38 +122,12 @@ public class AdpMasterService {
         int errorCount = 0;
         int rowNumber = 0;
 
-        CsvMapper csvMapper = new CsvMapper();
-        csvMapper.enable(CsvParser.Feature.WRAP_AS_ARRAY);
-        CsvSchema schema = CsvSchema.emptySchema().withColumnSeparator(',');
-
-        try (InputStream inputStream = file.getInputStream();
-             MappingIterator<String[]> iterator = csvMapper.readerFor(String[].class).with(schema).readValues(inputStream)) {
-
-            if (!iterator.hasNext()) {
-                return new AdpMasterBulkUploadResponse(0, 0, 0, "No records provided.");
-            }
-
-            String[] firstRow = iterator.next();
+        for (Map<String, Object> row : rows) {
             rowNumber++;
-            ColumnMapping mapping = resolveColumnMapping(firstRow);
-
-            if (!mapping.hasHeader) {
-                UploadResult result = processRow(firstRow, rowNumber, mapping);
-                added += result.added;
-                skipped += result.skipped;
-                errorCount += result.errorCount;
-            }
-
-            while (iterator.hasNext()) {
-                String[] row = iterator.next();
-                rowNumber++;
-                UploadResult result = processRow(row, rowNumber, mapping);
-                added += result.added;
-                skipped += result.skipped;
-                errorCount += result.errorCount;
-            }
-        } catch (IOException exception) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid CSV file", exception);
+            UploadResult result = processRow(row, rowNumber);
+            added += result.added;
+            skipped += result.skipped;
+            errorCount += result.errorCount;
         }
 
         int processedRows = added + skipped + errorCount;
@@ -300,41 +252,25 @@ public class AdpMasterService {
         changes.put(field, diff);
     }
 
-    private ColumnMapping resolveColumnMapping(String[] firstRow) {
-        Map<String, Integer> indexes = new LinkedHashMap<>();
-        boolean hasHeaderMatch = false;
-
-        for (String column : DEFAULT_COLUMNS) {
-            indexes.put(column, -1);
-        }
-
-        for (int i = 0; i < firstRow.length; i++) {
-            String normalized = normalizeHeader(firstRow[i]);
-            if (normalized == null) {
-                continue;
-            }
-            for (Map.Entry<String, Set<String>> entry : COLUMN_ALIASES.entrySet()) {
-                if (entry.getValue().contains(normalized)) {
-                    indexes.put(entry.getKey(), i);
-                    hasHeaderMatch = true;
-                }
-            }
-        }
-
-        if (!hasHeaderMatch) {
-            for (int i = 0; i < DEFAULT_COLUMNS.size(); i++) {
-                indexes.put(DEFAULT_COLUMNS.get(i), i);
-            }
-        }
-
-        return new ColumnMapping(indexes, hasHeaderMatch);
-    }
-
-    private UploadResult processRow(String[] row, int rowNumber, ColumnMapping mapping) {
+    private UploadResult processRow(Map<String, Object> row, int rowNumber) {
         try {
-            String adpMakeId = normalizeValue(getValue(row, mapping.indexes.get("adpMakeId")));
-            String adpModelId = normalizeValue(getValue(row, mapping.indexes.get("adpModelId")));
-            String adpTypeId = normalizeValue(getValue(row, mapping.indexes.get("adpTypeId")));
+            if (row == null || row.isEmpty()) {
+                return UploadResult.skipped();
+            }
+
+            Map<String, String> normalizedRow = new LinkedHashMap<>();
+            for (Map.Entry<String, Object> entry : row.entrySet()) {
+                String normalizedKey = normalizeKey(entry.getKey());
+                if (normalizedKey == null) {
+                    continue;
+                }
+                Object value = entry.getValue();
+                normalizedRow.put(normalizedKey, value == null ? null : String.valueOf(value));
+            }
+
+            String adpMakeId = normalizeValue(resolveValue(normalizedRow, "adpMakeId"));
+            String adpModelId = normalizeValue(resolveValue(normalizedRow, "adpModelId"));
+            String adpTypeId = normalizeValue(resolveValue(normalizedRow, "adpTypeId"));
 
             if (isBlank(adpMakeId) || isBlank(adpModelId) || isBlank(adpTypeId)) {
                 return UploadResult.skipped();
@@ -343,16 +279,16 @@ public class AdpMasterService {
             ADPMaster incoming = new ADPMaster();
             incoming.setAdpMakeId(adpMakeId);
             incoming.setAdpModelId(adpModelId);
-            incoming.setMakeEnDesc(normalizeValue(getValue(row, mapping.indexes.get("makeEnDesc"))));
-            incoming.setMakeArDesc(normalizeValue(getValue(row, mapping.indexes.get("makeArDesc"))));
-            incoming.setModelEnDesc(normalizeValue(getValue(row, mapping.indexes.get("modelEnDesc"))));
-            incoming.setModelArDesc(normalizeValue(getValue(row, mapping.indexes.get("modelArDesc"))));
+            incoming.setMakeEnDesc(normalizeValue(resolveValue(normalizedRow, "makeEnDesc")));
+            incoming.setMakeArDesc(normalizeValue(resolveValue(normalizedRow, "makeArDesc")));
+            incoming.setModelEnDesc(normalizeValue(resolveValue(normalizedRow, "modelEnDesc")));
+            incoming.setModelArDesc(normalizeValue(resolveValue(normalizedRow, "modelArDesc")));
             incoming.setAdpTypeId(adpTypeId);
-            incoming.setTypeEnDesc(normalizeValue(getValue(row, mapping.indexes.get("typeEnDesc"))));
-            incoming.setTypeArDesc(normalizeValue(getValue(row, mapping.indexes.get("typeArDesc"))));
-            incoming.setKindCode(normalizeValue(getValue(row, mapping.indexes.get("kindCode"))));
-            incoming.setKindEnDesc(normalizeValue(getValue(row, mapping.indexes.get("kindEnDesc"))));
-            incoming.setKindArDesc(normalizeValue(getValue(row, mapping.indexes.get("kindArDesc"))));
+            incoming.setTypeEnDesc(normalizeValue(resolveValue(normalizedRow, "typeEnDesc")));
+            incoming.setTypeArDesc(normalizeValue(resolveValue(normalizedRow, "typeArDesc")));
+            incoming.setKindCode(normalizeValue(resolveValue(normalizedRow, "kindCode")));
+            incoming.setKindEnDesc(normalizeValue(resolveValue(normalizedRow, "kindEnDesc")));
+            incoming.setKindArDesc(normalizeValue(resolveValue(normalizedRow, "kindArDesc")));
 
             Optional<ADPMaster> existingOpt = adpMasterRepository
                 .findByAdpMakeIdAndAdpModelIdAndAdpTypeId(adpMakeId, adpModelId, adpTypeId);
@@ -375,7 +311,27 @@ public class AdpMasterService {
         }
     }
 
-    private String normalizeHeader(String header) {
+    private String resolveValue(Map<String, String> normalizedRow, String canonicalKey) {
+        if (normalizedRow == null || normalizedRow.isEmpty()) {
+            return null;
+        }
+        String normalizedCanonical = normalizeKey(canonicalKey);
+        if (normalizedCanonical != null && normalizedRow.containsKey(normalizedCanonical)) {
+            return normalizedRow.get(normalizedCanonical);
+        }
+        Set<String> aliases = COLUMN_ALIASES.get(canonicalKey);
+        if (aliases == null) {
+            return null;
+        }
+        for (String alias : aliases) {
+            if (normalizedRow.containsKey(alias)) {
+                return normalizedRow.get(alias);
+            }
+        }
+        return null;
+    }
+
+    private String normalizeKey(String header) {
         if (header == null) {
             return null;
         }
@@ -389,13 +345,6 @@ public class AdpMasterService {
         }
         String trimmed = value.trim();
         return trimmed.isEmpty() ? null : trimmed;
-    }
-
-    private String getValue(String[] row, Integer index) {
-        if (index == null || index < 0 || index >= row.length) {
-            return null;
-        }
-        return row[index];
     }
 
     private void recordHistory(ADPMaster master, String action, Object details) {
@@ -425,16 +374,6 @@ public class AdpMasterService {
         FULL,
         SYNC_ONLY,
         BULK_UPLOAD
-    }
-
-    private static class ColumnMapping {
-        private final Map<String, Integer> indexes;
-        private final boolean hasHeader;
-
-        private ColumnMapping(Map<String, Integer> indexes, boolean hasHeader) {
-            this.indexes = indexes;
-            this.hasHeader = hasHeader;
-        }
     }
 
     private static class UploadResult {
