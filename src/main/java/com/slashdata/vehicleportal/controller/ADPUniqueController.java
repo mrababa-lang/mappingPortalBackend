@@ -5,6 +5,7 @@ import com.slashdata.vehicleportal.dto.AdpMakeExportRow;
 import com.slashdata.vehicleportal.dto.AdpTypeMapRequest;
 import com.slashdata.vehicleportal.dto.AdpTypeExportRow;
 import com.slashdata.vehicleportal.dto.ApiResponse;
+import com.slashdata.vehicleportal.dto.PagedResponse;
 import com.slashdata.vehicleportal.entity.ADPMakeMapping;
 import com.slashdata.vehicleportal.entity.ADPTypeMapping;
 import com.slashdata.vehicleportal.entity.Make;
@@ -22,6 +23,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.stream.Stream;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -64,10 +66,11 @@ public class ADPUniqueController {
     }
 
     @GetMapping("/makes")
-    public ApiResponse<?> uniqueMakes(@RequestParam(value = "q", required = false) String query,
-                                      @RequestParam(value = "status", required = false) String status,
-                                      Pageable pageable) {
-        return ApiResponse.fromPage(adpMasterRepository.findUniqueMakes(normalizeQuery(query), normalizeStatus(status), pageable));
+    public PagedResponse<?> uniqueMakes(@RequestParam(value = "q", required = false) String query,
+                                        @RequestParam(value = "status", required = false) String status,
+                                        @PageableDefault(page = 0, size = 20) Pageable pageable) {
+        return PagedResponse.fromPage(adpMasterRepository.findUniqueMakes(normalizeQuery(query),
+            normalizeStatus(status), pageable));
     }
 
     @PostMapping("/makes/map")
@@ -89,10 +92,11 @@ public class ADPUniqueController {
     }
 
     @GetMapping("/types")
-    public ApiResponse<?> uniqueTypes(@RequestParam(value = "q", required = false) String query,
-                                      @RequestParam(value = "status", required = false) String status,
-                                      Pageable pageable) {
-        return ApiResponse.fromPage(adpMasterRepository.findUniqueTypes(normalizeQuery(query), normalizeStatus(status), pageable));
+    public PagedResponse<?> uniqueTypes(@RequestParam(value = "q", required = false) String query,
+                                        @RequestParam(value = "status", required = false) String status,
+                                        @PageableDefault(page = 0, size = 20) Pageable pageable) {
+        return PagedResponse.fromPage(adpMasterRepository.findUniqueTypes(normalizeQuery(query),
+            normalizeStatus(status), pageable));
     }
 
     @PostMapping("/types/map")
@@ -172,8 +176,11 @@ public class ADPUniqueController {
         if (status == null || status.isBlank() || "all".equalsIgnoreCase(status)) {
             return "all";
         }
-        if ("mapped".equalsIgnoreCase(status) || "unmapped".equalsIgnoreCase(status)) {
-            return status.toLowerCase();
+        if ("mapped".equalsIgnoreCase(status)) {
+            return "mapped";
+        }
+        if ("unmapped".equalsIgnoreCase(status)) {
+            return "unmapped";
         }
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid status filter");
     }
