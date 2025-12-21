@@ -1,6 +1,7 @@
 package com.slashdata.vehicleportal.entity;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -20,6 +21,16 @@ public class AppConfig {
 
     @Column(name = "api_key")
     private String apiKey = "";
+
+    @Convert(converter = AiProviderConverter.class)
+    @Column(name = "ai_provider")
+    private AiProvider aiProvider = AiProvider.GEMINI;
+
+    @Column(name = "system_instruction", columnDefinition = "TEXT")
+    private String systemInstruction = "";
+
+    @Column(name = "ai_api_key", columnDefinition = "TEXT")
+    private String aiApiKey = "";
 
     @Column(name = "ai_confidence_threshold")
     private Double aiConfidenceThreshold = 0.0;
@@ -52,6 +63,30 @@ public class AppConfig {
 
     public void setApiKey(String apiKey) {
         this.apiKey = apiKey;
+    }
+
+    public AiProvider getAiProvider() {
+        return aiProvider;
+    }
+
+    public void setAiProvider(AiProvider aiProvider) {
+        this.aiProvider = aiProvider;
+    }
+
+    public String getSystemInstruction() {
+        return systemInstruction;
+    }
+
+    public void setSystemInstruction(String systemInstruction) {
+        this.systemInstruction = systemInstruction;
+    }
+
+    public String getAiApiKey() {
+        return aiApiKey;
+    }
+
+    public void setAiApiKey(String aiApiKey) {
+        this.aiApiKey = aiApiKey;
     }
 
     public Double getAiConfidenceThreshold() {

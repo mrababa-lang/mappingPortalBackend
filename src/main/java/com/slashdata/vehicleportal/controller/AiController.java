@@ -6,6 +6,7 @@ import com.slashdata.vehicleportal.dto.ApiResponse;
 import com.slashdata.vehicleportal.entity.User;
 import com.slashdata.vehicleportal.service.AdpMappingService;
 import com.slashdata.vehicleportal.service.AiBatchMatchingService;
+import com.slashdata.vehicleportal.service.AiDescriptionService;
 import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
@@ -21,10 +22,13 @@ public class AiController {
 
     private final AiBatchMatchingService aiBatchMatchingService;
     private final AdpMappingService adpMappingService;
+    private final AiDescriptionService aiDescriptionService;
 
-    public AiController(AiBatchMatchingService aiBatchMatchingService, AdpMappingService adpMappingService) {
+    public AiController(AiBatchMatchingService aiBatchMatchingService, AdpMappingService adpMappingService,
+                        AiDescriptionService aiDescriptionService) {
         this.aiBatchMatchingService = aiBatchMatchingService;
         this.adpMappingService = adpMappingService;
+        this.aiDescriptionService = aiDescriptionService;
     }
 
     @PostMapping("/suggest-mapping")
@@ -45,8 +49,10 @@ public class AiController {
 
     @PostMapping("/generate-description")
     public ApiResponse<Map<String, Object>> generateDescription(@RequestBody Map<String, Object> payload) {
+        String name = String.valueOf(payload.getOrDefault("name", ""));
+        String description = aiDescriptionService.generateDescription(name);
         Map<String, Object> response = new HashMap<>();
-        response.put("description", payload.getOrDefault("name", ""));
+        response.put("description", description);
         return ApiResponse.of(response);
     }
 

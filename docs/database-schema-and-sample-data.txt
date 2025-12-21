@@ -123,6 +123,11 @@ CREATE TABLE app_config (
     maintenance_mode BOOLEAN DEFAULT FALSE,
     enable_audit_log BOOLEAN DEFAULT FALSE
 );
+
+ALTER TABLE app_config
+    ADD COLUMN ai_provider ENUM('gemini', 'openai') DEFAULT 'gemini',
+    ADD COLUMN system_instruction TEXT,
+    ADD COLUMN ai_api_key TEXT;
 ```
 
 ## Sample seed data
