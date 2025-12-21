@@ -5,10 +5,16 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 
 @Entity
-@Table(name = "adp_master")
+@Table(
+    name = "adp_master",
+    uniqueConstraints = @UniqueConstraint(columnNames = {"adp_make_id", "adp_model_id"}),
+    indexes = @Index(name = "idx_adp_master_make_id", columnList = "adp_make_id")
+)
 public class ADPMaster {
 
     @Id
