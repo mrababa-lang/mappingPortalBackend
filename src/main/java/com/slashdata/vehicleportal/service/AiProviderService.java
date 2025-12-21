@@ -62,7 +62,7 @@ public class AiProviderService {
 
     private String callGemini(String apiKey, String systemInstruction, String prompt) {
         try {
-            Client client = new Client(apiKey);
+            Client client = Client.builder().apiKey(apiKey).build();
             GenerateContentConfig.Builder configBuilder = GenerateContentConfig.builder();
             if (systemInstruction != null && !systemInstruction.isBlank()) {
                 Content systemContent = Content.builder()
