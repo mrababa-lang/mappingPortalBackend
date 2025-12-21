@@ -55,6 +55,9 @@ public interface ADPMappingRepository extends JpaRepository<ADPMapping, String>,
         left join mapping.reviewedBy reviewer
         where (:query is null or lower(master.makeEnDesc) like lower(concat('%', :query, '%'))
             or lower(master.modelEnDesc) like lower(concat('%', :query, '%')))
+          and (:adpMakeId is null or master.adpMakeId = :adpMakeId)
+          and (:makeId is null or make.id = :makeId)
+          and (:typeId is null or master.adpTypeId = :typeId)
           and (
               (:unmappedOnly = true and mapping.id is null)
               or (:unmappedOnly = false and (:mappingStatus is null or mapping.status = :mappingStatus))
@@ -76,6 +79,9 @@ public interface ADPMappingRepository extends JpaRepository<ADPMapping, String>,
                                              @Param("unmappedOnly") boolean unmappedOnly,
                                              @Param("reviewStatus") String reviewStatus,
                                              @Param("userId") Long userId,
+                                             @Param("adpMakeId") String adpMakeId,
+                                             @Param("makeId") String makeId,
+                                             @Param("typeId") String typeId,
                                              @Param("from") LocalDateTime from,
                                              @Param("to") LocalDateTime to,
                                              Pageable pageable);

@@ -1,7 +1,7 @@
 package com.slashdata.vehicleportal.controller;
 
 import com.slashdata.vehicleportal.dto.AdpMappingViewDto;
-import com.slashdata.vehicleportal.dto.ApiResponse;
+import com.slashdata.vehicleportal.dto.PagedResponse;
 import com.slashdata.vehicleportal.dto.MappedVehicleExportRow;
 import com.slashdata.vehicleportal.entity.MappingStatus;
 import com.slashdata.vehicleportal.repository.ADPMappingRepository;
@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.stream.Stream;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -45,19 +47,22 @@ public class ADPMappedVehiclesController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_USER', 'MAPPING_ADMIN')")
-    public ApiResponse<?> list(@RequestParam(value = "q", required = false) String query,
-                               @RequestParam(value = "dateFrom", required = false)
-                               @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
-                               @RequestParam(value = "dateTo", required = false)
-                               @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
-                               @RequestParam(value = "reviewedOnly", defaultValue = "false") boolean reviewedOnly,
-                               Pageable pageable) {
+    public PagedResponse<AdpMappingViewDto> list(@RequestParam(value = "q", required = false) String query,
+                                                 @RequestParam(value = "dateFrom", required = false)
+                                                 @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
+                                                 @RequestParam(value = "dateTo", required = false)
+                                                 @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
+                                                 @RequestParam(value = "reviewedOnly", defaultValue = "false")
+                                                 boolean reviewedOnly,
+                                                 @PageableDefault(page = 0, size = 20,
+                                                     sort = "updatedAt", direction = Sort.Direction.DESC)
+                                                 Pageable pageable) {
         LocalDateTime from = dateFrom != null ? dateFrom.atStartOfDay() : null;
         LocalDateTime to = dateTo != null ? dateTo.plusDays(1).atStartOfDay().minusNanos(1) : null;
 
         Page<AdpMappingViewDto> page = adpMappingRepository.findMappedVehicleViews(query, from, to, reviewedOnly,
             MAPPED_STATUSES, pageable);
-        return ApiResponse.fromPage(page);
+        return PagedResponse.fromPage(page);
     }
 
     @GetMapping("/export")

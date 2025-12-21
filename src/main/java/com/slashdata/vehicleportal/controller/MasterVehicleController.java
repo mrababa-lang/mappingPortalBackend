@@ -1,6 +1,6 @@
 package com.slashdata.vehicleportal.controller;
 
-import com.slashdata.vehicleportal.dto.ApiResponse;
+import com.slashdata.vehicleportal.dto.PagedResponse;
 import com.slashdata.vehicleportal.dto.MasterVehicleExportRow;
 import com.slashdata.vehicleportal.dto.MasterVehicleView;
 import com.slashdata.vehicleportal.repository.ModelRepository;
@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.stream.Stream;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -36,13 +37,14 @@ public class MasterVehicleController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_USER', 'MAPPING_ADMIN')")
-    public ApiResponse<?> list(@RequestParam(value = "q", required = false) String query,
-                               @RequestParam(value = "makeId", required = false) String makeId,
-                               @RequestParam(value = "typeId", required = false) Long typeId,
-                               Pageable pageable) {
+    public PagedResponse<MasterVehicleView> list(@RequestParam(value = "q", required = false) String query,
+                                                 @RequestParam(value = "makeId", required = false) String makeId,
+                                                 @RequestParam(value = "typeId", required = false) Long typeId,
+                                                 @RequestParam(value = "kindCode", required = false) String kindCode,
+                                                 @PageableDefault(page = 0, size = 20) Pageable pageable) {
         Page<MasterVehicleView> page = modelRepository.findMasterVehicleViews(normalizeQuery(query), makeId,
-            normalizeTypeId(typeId), pageable);
-        return ApiResponse.fromPage(page);
+            normalizeTypeId(typeId), normalizeQuery(kindCode), pageable);
+        return PagedResponse.fromPage(page);
     }
 
     @GetMapping("/export")
@@ -51,6 +53,7 @@ public class MasterVehicleController {
     public ResponseEntity<StreamingResponseBody> exportCsv(
         @RequestParam(value = "makeId", required = false) String makeId,
         @RequestParam(value = "typeId", required = false) Long typeId,
+        @RequestParam(value = "kindCode", required = false) String kindCode,
         @RequestParam(value = "format", defaultValue = "csv") String format) {
 
         if (!"csv".equalsIgnoreCase(format)) {
@@ -60,7 +63,7 @@ public class MasterVehicleController {
         StreamingResponseBody responseBody = outputStream -> {
             try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8));
                  Stream<MasterVehicleExportRow> rows = modelRepository.streamMasterVehiclesForExport(makeId,
-                     normalizeTypeId(typeId))) {
+                     normalizeTypeId(typeId), normalizeQuery(kindCode))) {
                 writeCsvHeader(writer);
                 rows.forEach(row -> writeCsvRow(writer, row));
                 writer.flush();

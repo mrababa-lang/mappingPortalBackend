@@ -5,6 +5,8 @@ import com.slashdata.vehicleportal.dto.UniqueAdpTypeView;
 import com.slashdata.vehicleportal.dto.AdpMakeExportRow;
 import com.slashdata.vehicleportal.dto.AdpTypeExportRow;
 import com.slashdata.vehicleportal.entity.ADPMaster;
+import com.slashdata.vehicleportal.entity.MappingStatus;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -85,6 +87,54 @@ public interface ADPMasterRepository extends JpaRepository<ADPMaster, String>, J
         """,
         nativeQuery = true)
     Page<UniqueAdpTypeView> findUniqueTypes(@Param("q") String query, @Param("status") String status, Pageable pageable);
+
+    @Query(value = """
+        select distinct master from ADPMaster master
+        left join ADPMapping mapping on mapping.adpMaster = master
+        where (:query is null or lower(master.adpMakeId) like lower(concat('%', :query, '%'))
+            or lower(master.adpModelId) like lower(concat('%', :query, '%'))
+            or lower(master.makeEnDesc) like lower(concat('%', :query, '%'))
+            or lower(master.modelEnDesc) like lower(concat('%', :query, '%'))
+            or lower(master.kindEnDesc) like lower(concat('%', :query, '%'))
+            or lower(master.kindCode) like lower(concat('%', :query, '%')))
+          and (:adpMakeId is null or master.adpMakeId = :adpMakeId)
+          and (:typeId is null or master.adpTypeId = :typeId)
+          and (:kindCode is null or master.kindCode = :kindCode)
+          and (
+              (:unmappedOnly = true and mapping.id is null)
+              or (:unmappedOnly = false and (:mappingStatus is null or mapping.status = :mappingStatus))
+          )
+          and (:from is null or mapping.updatedAt is null or mapping.updatedAt >= :from)
+          and (:to is null or mapping.updatedAt is null or mapping.updatedAt <= :to)
+        """,
+        countQuery = """
+        select count(distinct master.id) from ADPMaster master
+        left join ADPMapping mapping on mapping.adpMaster = master
+        where (:query is null or lower(master.adpMakeId) like lower(concat('%', :query, '%'))
+            or lower(master.adpModelId) like lower(concat('%', :query, '%'))
+            or lower(master.makeEnDesc) like lower(concat('%', :query, '%'))
+            or lower(master.modelEnDesc) like lower(concat('%', :query, '%'))
+            or lower(master.kindEnDesc) like lower(concat('%', :query, '%'))
+            or lower(master.kindCode) like lower(concat('%', :query, '%')))
+          and (:adpMakeId is null or master.adpMakeId = :adpMakeId)
+          and (:typeId is null or master.adpTypeId = :typeId)
+          and (:kindCode is null or master.kindCode = :kindCode)
+          and (
+              (:unmappedOnly = true and mapping.id is null)
+              or (:unmappedOnly = false and (:mappingStatus is null or mapping.status = :mappingStatus))
+          )
+          and (:from is null or mapping.updatedAt is null or mapping.updatedAt >= :from)
+          and (:to is null or mapping.updatedAt is null or mapping.updatedAt <= :to)
+        """)
+    Page<ADPMaster> searchMasterRecords(@Param("query") String query,
+                                        @Param("adpMakeId") String adpMakeId,
+                                        @Param("typeId") String typeId,
+                                        @Param("kindCode") String kindCode,
+                                        @Param("mappingStatus") MappingStatus mappingStatus,
+                                        @Param("unmappedOnly") boolean unmappedOnly,
+                                        @Param("from") LocalDateTime from,
+                                        @Param("to") LocalDateTime to,
+                                        Pageable pageable);
 
     @Query("SELECT COUNT(DISTINCT am.adpMakeId) FROM ADPMaster am")
     long countDistinctAdpMakeId();

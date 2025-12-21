@@ -3,6 +3,7 @@ package com.slashdata.vehicleportal.controller;
 import com.slashdata.vehicleportal.dto.AdpMappingRequest;
 import com.slashdata.vehicleportal.dto.AdpMappingViewDto;
 import com.slashdata.vehicleportal.dto.ApiResponse;
+import com.slashdata.vehicleportal.dto.PagedResponse;
 import com.slashdata.vehicleportal.entity.ADPMapping;
 import com.slashdata.vehicleportal.entity.MappingStatus;
 import com.slashdata.vehicleportal.entity.User;
@@ -15,10 +16,12 @@ import java.security.Principal;
 import java.time.LocalDateTime;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -46,16 +49,21 @@ public class ADPMappingController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_USER', 'MAPPING_ADMIN')")
-    public ApiResponse<?> search(@RequestParam(value = "q", required = false) String query,
-                                 @RequestParam(value = "reviewStatus", required = false, defaultValue = "all") String reviewStatus,
-                                 @RequestParam(value = "mappingType", required = false, defaultValue = "all") String mappingType,
-                                 @RequestParam(value = "status", required = false) String status,
-                                 @RequestParam(value = "userId", required = false) Long userId,
-                                 @RequestParam(value = "dateFrom", required = false)
-                                 @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
-                                 @RequestParam(value = "dateTo", required = false)
-                                 @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
-                                 Pageable pageable) {
+    public PagedResponse<AdpMappingViewDto> search(@RequestParam(value = "q", required = false) String query,
+                                                   @RequestParam(value = "reviewStatus", required = false, defaultValue = "all")
+                                                   String reviewStatus,
+                                                   @RequestParam(value = "mappingType", required = false, defaultValue = "all")
+                                                   String mappingType,
+                                                   @RequestParam(value = "status", required = false) String status,
+                                                   @RequestParam(value = "userId", required = false) Long userId,
+                                                   @RequestParam(value = "adpMakeId", required = false) String adpMakeId,
+                                                   @RequestParam(value = "makeId", required = false) String makeId,
+                                                   @RequestParam(value = "typeId", required = false) String typeId,
+                                                   @RequestParam(value = "dateFrom", required = false)
+                                                   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
+                                                   @RequestParam(value = "dateTo", required = false)
+                                                   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
+                                                   @PageableDefault(page = 0, size = 20) Pageable pageable) {
         String normalizedMappingType = status != null ? status : mappingType;
         boolean unmappedOnly = isUnmapped(normalizedMappingType);
         MappingStatus mappingStatus = parseMappingStatus(normalizedMappingType);
@@ -63,9 +71,10 @@ public class ADPMappingController {
         LocalDateTime from = dateFrom != null ? dateFrom.atStartOfDay() : null;
         LocalDateTime to = dateTo != null ? dateTo.plusDays(1).atStartOfDay().minusNanos(1) : null;
 
-        Page<AdpMappingViewDto> page = adpMappingRepository.findMappingViews(query, mappingStatus, unmappedOnly,
-            normalizedReviewStatus, userId, from, to, pageable);
-        return ApiResponse.fromPage(page);
+        Page<AdpMappingViewDto> page = adpMappingRepository.findMappingViews(normalizeQuery(query), mappingStatus,
+            unmappedOnly, normalizedReviewStatus, userId, normalizeQuery(adpMakeId), normalizeQuery(makeId),
+            normalizeQuery(typeId), from, to, pageable);
+        return PagedResponse.fromPage(page);
     }
 
     @PutMapping("/{adpId}")
@@ -78,10 +87,12 @@ public class ADPMappingController {
 
     @GetMapping("/review")
     @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_ADMIN')")
-    public ApiResponse<?> reviewQueue(@RequestParam(value = "status", required = false) String reviewStatus,
-                                      Pageable pageable) {
+    public PagedResponse<ADPMapping> reviewQueue(@RequestParam(value = "status", required = false) String reviewStatus,
+                                                 @PageableDefault(page = 0, size = 20,
+                                                     sort = "updatedAt", direction = Sort.Direction.DESC)
+                                                 Pageable pageable) {
         Specification<ADPMapping> spec = ADPMappingSpecifications.reviewStatus(reviewStatus);
-        return ApiResponse.fromPage(adpMappingRepository.findAll(spec, pageable));
+        return PagedResponse.fromPage(adpMappingRepository.findAll(spec, pageable));
     }
 
     @PostMapping("/{adpId}/approve")
@@ -131,5 +142,13 @@ public class ADPMappingController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid review status value");
         }
         return normalized;
+    }
+
+    private String normalizeQuery(String query) {
+        if (query == null) {
+            return null;
+        }
+        String trimmed = query.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 }

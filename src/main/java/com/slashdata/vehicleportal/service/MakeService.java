@@ -7,11 +7,14 @@ import com.slashdata.vehicleportal.repository.ADPMappingRepository;
 import com.slashdata.vehicleportal.repository.MakeRepository;
 import com.slashdata.vehicleportal.repository.ModelRepository;
 import java.time.LocalDateTime;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -55,6 +58,10 @@ public class MakeService {
 
     public List<Make> findAll() {
         return makeRepository.findAll();
+    }
+
+    public Page<Make> search(String query, String status, LocalDateTime from, LocalDateTime to, Pageable pageable) {
+        return makeRepository.searchMakes(query, status, from, to, pageable);
     }
 
     @Transactional
