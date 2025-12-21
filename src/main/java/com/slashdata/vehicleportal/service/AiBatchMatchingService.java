@@ -30,14 +30,17 @@ public class AiBatchMatchingService {
     private final MakeRepository makeRepository;
     private final ModelRepository modelRepository;
     private final DashboardStatsService dashboardStatsService;
+    private final AppConfigService appConfigService;
 
     public AiBatchMatchingService(ADPMasterRepository adpMasterRepository,
                                   MakeRepository makeRepository, ModelRepository modelRepository,
-                                  DashboardStatsService dashboardStatsService) {
+                                  DashboardStatsService dashboardStatsService,
+                                  AppConfigService appConfigService) {
         this.adpMasterRepository = adpMasterRepository;
         this.makeRepository = makeRepository;
         this.modelRepository = modelRepository;
         this.dashboardStatsService = dashboardStatsService;
+        this.appConfigService = appConfigService;
     }
 
     @Async
@@ -147,6 +150,7 @@ public class AiBatchMatchingService {
     }
 
     private String buildPrompt(List<Make> makes, List<Model> models) {
+        String systemInstruction = appConfigService.getSystemInstruction();
         String makeListing = makes.stream()
             .map(make -> String.format("%s:%s", make.getId(), make.getName()))
             .collect(Collectors.joining(", "));
@@ -160,10 +164,15 @@ public class AiBatchMatchingService {
                 .collect(Collectors.joining(", "));
             modelListing.append(entry.getKey()).append(" -> [").append(modelsForMake).append("]\n");
         }
-        return "Context: Vehicle Taxonomy AI matching.\n"
-            + "Active Manufacturers: [" + makeListing + "]\n"
-            + "Models by Make (only once per batch):\n" + modelListing
-            + "Instructions: For each raw ADP line, respond with JSON { adpId, sdMakeId, sdModelId, score }.";
+        StringBuilder prompt = new StringBuilder();
+        if (systemInstruction != null && !systemInstruction.isBlank()) {
+            prompt.append("System Instruction:\n").append(systemInstruction).append("\n\n");
+        }
+        prompt.append("Context: Vehicle Taxonomy AI matching.\n")
+            .append("Active Manufacturers: [").append(makeListing).append("]\n")
+            .append("Models by Make (only once per batch):\n").append(modelListing)
+            .append("Instructions: For each raw ADP line, respond with JSON { adpId, sdMakeId, sdModelId, score }.");
+        return prompt.toString();
     }
 
     private static class AiMappingSuggestion {

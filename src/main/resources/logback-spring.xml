@@ -19,8 +19,23 @@
         </encoder>
     </appender>
 
+    <appender name="AUDIT_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/audit.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/audit.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level %msg%n</pattern>
+        </encoder>
+    </appender>
+
     <logger name="API_CALLS" level="INFO" additivity="false">
         <appender-ref ref="API_FILE"/>
+    </logger>
+
+    <logger name="AUDIT_LOG" level="INFO" additivity="false">
+        <appender-ref ref="AUDIT_FILE"/>
     </logger>
 
     <root level="INFO">
