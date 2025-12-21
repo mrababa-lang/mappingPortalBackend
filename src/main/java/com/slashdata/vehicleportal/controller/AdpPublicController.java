@@ -7,10 +7,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import com.slashdata.vehicleportal.dto.AdpAttributeDto;
+import com.slashdata.vehicleportal.dto.AdpMasterBulkUploadResponse;
 import com.slashdata.vehicleportal.dto.ApiResponse;
 import com.slashdata.vehicleportal.entity.ADPMaster;
 import com.slashdata.vehicleportal.repository.ADPMappingRepository;
 import com.slashdata.vehicleportal.repository.ADPMasterRepository;
+import com.slashdata.vehicleportal.service.AdpMasterService;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -26,7 +28,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/adp")
@@ -34,6 +38,7 @@ public class AdpPublicController {
 
     private final ADPMasterRepository adpMasterRepository;
     private final ADPMappingRepository adpMappingRepository;
+    private final AdpMasterService adpMasterService;
     private final CsvMapper csvMapper;
     private final ObjectMapper objectMapper;
 
@@ -56,9 +61,11 @@ public class AdpPublicController {
 
     public AdpPublicController(ADPMasterRepository adpMasterRepository,
                                ADPMappingRepository adpMappingRepository,
+                               AdpMasterService adpMasterService,
                                ObjectMapper objectMapper) {
         this.adpMasterRepository = adpMasterRepository;
         this.adpMappingRepository = adpMappingRepository;
+        this.adpMasterService = adpMasterService;
         this.objectMapper = objectMapper;
         this.csvMapper = new CsvMapper();
         this.csvMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -90,6 +97,11 @@ public class AdpPublicController {
     {
         List<ADPMaster> records = replaceMasters(parsePayload(payload, contentType));
         return ResponseEntity.ok(ApiResponse.of(records));
+    }
+
+    @PostMapping(value = "/master/bulk-upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<AdpMasterBulkUploadResponse> bulkUpload(@RequestParam("file") MultipartFile file) {
+        return ApiResponse.of(adpMasterService.bulkUpload(file));
     }
 
     private List<AdpAttributeDto> extractDistinctAttributes(AttributeSelector selector) {

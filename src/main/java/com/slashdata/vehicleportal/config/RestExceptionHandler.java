@@ -15,7 +15,8 @@ public class RestExceptionHandler {
     private static final Map<String, String> EXPECTED_MEDIA_TYPES = Map.of(
         "/api/makes/bulk", "application/json, text/csv",
         "/api/models/bulk", "application/json, text/csv",
-        "/api/adp/master/upload", "application/json, text/csv"
+        "/api/adp/master/upload", "application/json, text/csv",
+        "/api/adp/master/bulk-upload", "multipart/form-data"
     );
 
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
