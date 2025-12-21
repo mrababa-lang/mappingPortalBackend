@@ -48,18 +48,18 @@ public class AdpMasterService {
     );
 
     private static final Map<String, Set<String>> COLUMN_ALIASES = Map.ofEntries(
-        Map.entry("adpMakeId", Set.of("make code", "make_id", "makeid", "adpmakeid")),
-        Map.entry("makeEnDesc", Set.of("desc en", "make_en", "makedescription", "makeendesc")),
-        Map.entry("makeArDesc", Set.of("desc ar", "make_ar", "makeardesc")),
-        Map.entry("adpModelId", Set.of("model code", "model_id", "adpmodelid")),
-        Map.entry("modelEnDesc", Set.of("model desc en", "modelendesc")),
-        Map.entry("modelArDesc", Set.of("model desc ar", "modelardesc")),
-        Map.entry("adpTypeId", Set.of("type code", "type_id", "adptypeid")),
-        Map.entry("typeEnDesc", Set.of("type desc en", "typeendesc")),
-        Map.entry("typeArDesc", Set.of("type desc ar", "typeardesc")),
-        Map.entry("kindCode", Set.of("kind code", "kindcode")),
-        Map.entry("kindEnDesc", Set.of("kind desc en", "kindendesc")),
-        Map.entry("kindArDesc", Set.of("kind desc ar", "kindardesc"))
+        Map.entry("adpMakeId", Set.of("adpmakeid", "makecode", "makeid")),
+        Map.entry("makeEnDesc", Set.of("makeendesc", "descen", "makeen")),
+        Map.entry("makeArDesc", Set.of("makeardesc", "descar", "makear")),
+        Map.entry("adpModelId", Set.of("adpmodelid", "modelcode", "modelid")),
+        Map.entry("modelEnDesc", Set.of("modelendesc", "modeldescen")),
+        Map.entry("modelArDesc", Set.of("modelardesc", "modeldescar")),
+        Map.entry("adpTypeId", Set.of("adptypeid", "typecode", "typeid")),
+        Map.entry("typeEnDesc", Set.of("typeendesc", "typedescen")),
+        Map.entry("typeArDesc", Set.of("typeardesc", "typedescar")),
+        Map.entry("kindCode", Set.of("kindcode", "classificationcode")),
+        Map.entry("kindEnDesc", Set.of("kindendesc", "classificationen")),
+        Map.entry("kindArDesc", Set.of("kindardesc", "kinddescar", "classificationar"))
     );
 
     private final ADPMasterRepository adpMasterRepository;
@@ -178,7 +178,8 @@ public class AdpMasterService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid CSV file", exception);
         }
 
-        String message = String.format("Synchronization complete. %d rows failed due to format issues.", errorCount);
+        int processedRows = added + skipped + errorCount;
+        String message = String.format("Processed %d rows. %d rows failed validation.", processedRows, errorCount);
         return new AdpMasterBulkUploadResponse(added, skipped, errorCount, message);
     }
 
@@ -260,6 +261,26 @@ public class AdpMasterService {
                 registerChange(changes, "kindArDesc", target.getKindArDesc(), source.getKindArDesc(),
                     value -> target.setKindArDesc((String) value));
             }
+            case BULK_UPLOAD -> {
+                registerChange(changes, "makeEnDesc", target.getMakeEnDesc(), source.getMakeEnDesc(),
+                    value -> target.setMakeEnDesc((String) value));
+                registerChange(changes, "makeArDesc", target.getMakeArDesc(), source.getMakeArDesc(),
+                    value -> target.setMakeArDesc((String) value));
+                registerChange(changes, "modelEnDesc", target.getModelEnDesc(), source.getModelEnDesc(),
+                    value -> target.setModelEnDesc((String) value));
+                registerChange(changes, "modelArDesc", target.getModelArDesc(), source.getModelArDesc(),
+                    value -> target.setModelArDesc((String) value));
+                registerChange(changes, "typeEnDesc", target.getTypeEnDesc(), source.getTypeEnDesc(),
+                    value -> target.setTypeEnDesc((String) value));
+                registerChange(changes, "typeArDesc", target.getTypeArDesc(), source.getTypeArDesc(),
+                    value -> target.setTypeArDesc((String) value));
+                registerChange(changes, "kindCode", target.getKindCode(), source.getKindCode(),
+                    value -> target.setKindCode((String) value));
+                registerChange(changes, "kindEnDesc", target.getKindEnDesc(), source.getKindEnDesc(),
+                    value -> target.setKindEnDesc((String) value));
+                registerChange(changes, "kindArDesc", target.getKindArDesc(), source.getKindArDesc(),
+                    value -> target.setKindArDesc((String) value));
+            }
         }
         return changes;
     }
@@ -313,8 +334,9 @@ public class AdpMasterService {
         try {
             String adpMakeId = normalizeValue(getValue(row, mapping.indexes.get("adpMakeId")));
             String adpModelId = normalizeValue(getValue(row, mapping.indexes.get("adpModelId")));
+            String adpTypeId = normalizeValue(getValue(row, mapping.indexes.get("adpTypeId")));
 
-            if (isBlank(adpMakeId) || isBlank(adpModelId)) {
+            if (isBlank(adpMakeId) || isBlank(adpModelId) || isBlank(adpTypeId)) {
                 return UploadResult.skipped();
             }
 
@@ -325,17 +347,18 @@ public class AdpMasterService {
             incoming.setMakeArDesc(normalizeValue(getValue(row, mapping.indexes.get("makeArDesc"))));
             incoming.setModelEnDesc(normalizeValue(getValue(row, mapping.indexes.get("modelEnDesc"))));
             incoming.setModelArDesc(normalizeValue(getValue(row, mapping.indexes.get("modelArDesc"))));
-            incoming.setAdpTypeId(normalizeValue(getValue(row, mapping.indexes.get("adpTypeId"))));
+            incoming.setAdpTypeId(adpTypeId);
             incoming.setTypeEnDesc(normalizeValue(getValue(row, mapping.indexes.get("typeEnDesc"))));
             incoming.setTypeArDesc(normalizeValue(getValue(row, mapping.indexes.get("typeArDesc"))));
             incoming.setKindCode(normalizeValue(getValue(row, mapping.indexes.get("kindCode"))));
             incoming.setKindEnDesc(normalizeValue(getValue(row, mapping.indexes.get("kindEnDesc"))));
             incoming.setKindArDesc(normalizeValue(getValue(row, mapping.indexes.get("kindArDesc"))));
 
-            Optional<ADPMaster> existingOpt = adpMasterRepository.findByAdpMakeIdAndAdpModelId(adpMakeId, adpModelId);
+            Optional<ADPMaster> existingOpt = adpMasterRepository
+                .findByAdpMakeIdAndAdpModelIdAndAdpTypeId(adpMakeId, adpModelId, adpTypeId);
             if (existingOpt.isPresent()) {
                 ADPMaster existing = existingOpt.get();
-                Map<String, Map<String, Object>> changes = applyUpdates(existing, incoming, UpdateMode.SYNC_ONLY);
+                Map<String, Map<String, Object>> changes = applyUpdates(existing, incoming, UpdateMode.BULK_UPLOAD);
                 if (!changes.isEmpty()) {
                     adpMasterRepository.save(existing);
                     recordHistory(existing, "BULK_UPLOAD_SYNC", changes);
@@ -357,7 +380,7 @@ public class AdpMasterService {
             return null;
         }
         String trimmed = header.trim();
-        return trimmed.isEmpty() ? null : trimmed.toLowerCase();
+        return trimmed.isEmpty() ? null : trimmed.toLowerCase().replaceAll("[\\s_]+", "");
     }
 
     private String normalizeValue(String value) {
@@ -400,7 +423,8 @@ public class AdpMasterService {
 
     private enum UpdateMode {
         FULL,
-        SYNC_ONLY
+        SYNC_ONLY,
+        BULK_UPLOAD
     }
 
     private static class ColumnMapping {
