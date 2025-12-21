@@ -59,6 +59,12 @@ ALTER TABLE adp_master
     ADD CONSTRAINT uq_adp_master_make_model UNIQUE (adp_make_id, adp_model_id),
     ADD INDEX idx_adp_master_make_id (adp_make_id);
 
+ALTER TABLE adp_master
+    ADD COLUMN kind_code VARCHAR(50),
+    ADD COLUMN kind_en_desc TEXT,
+    ADD COLUMN kind_ar_desc TEXT,
+    ADD INDEX idx_adp_master_kind_code (kind_code);
+
 CREATE TABLE adp_make_mappings (
     id CHAR(36) NOT NULL PRIMARY KEY,
     adp_make_id VARCHAR(50) NOT NULL UNIQUE,

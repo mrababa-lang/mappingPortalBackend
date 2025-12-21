@@ -13,7 +13,10 @@ import jakarta.persistence.UniqueConstraint;
 @Table(
     name = "adp_master",
     uniqueConstraints = @UniqueConstraint(columnNames = {"adp_make_id", "adp_model_id"}),
-    indexes = @Index(name = "idx_adp_master_make_id", columnList = "adp_make_id")
+    indexes = {
+        @Index(name = "idx_adp_master_make_id", columnList = "adp_make_id"),
+        @Index(name = "idx_adp_master_kind_code", columnList = "kind_code")
+    }
 )
 public class ADPMaster {
 
@@ -48,6 +51,15 @@ public class ADPMaster {
 
     @Column(name = "type_ar_desc", length = 200)
     private String typeArDesc;
+
+    @Column(name = "kind_code", length = 50)
+    private String kindCode;
+
+    @Column(name = "kind_en_desc")
+    private String kindEnDesc;
+
+    @Column(name = "kind_ar_desc")
+    private String kindArDesc;
 
     public String getId() {
         return id;
@@ -127,5 +139,29 @@ public class ADPMaster {
 
     public void setTypeArDesc(String typeArDesc) {
         this.typeArDesc = typeArDesc;
+    }
+
+    public String getKindCode() {
+        return kindCode;
+    }
+
+    public void setKindCode(String kindCode) {
+        this.kindCode = kindCode;
+    }
+
+    public String getKindEnDesc() {
+        return kindEnDesc;
+    }
+
+    public void setKindEnDesc(String kindEnDesc) {
+        this.kindEnDesc = kindEnDesc;
+    }
+
+    public String getKindArDesc() {
+        return kindArDesc;
+    }
+
+    public void setKindArDesc(String kindArDesc) {
+        this.kindArDesc = kindArDesc;
     }
 }

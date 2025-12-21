@@ -10,9 +10,13 @@ public class MasterVehicleExportRow {
     private final String modelNameAr;
     private final Long typeId;
     private final String typeName;
+    private final String kindCode;
+    private final String kindEnDesc;
+    private final String kindArDesc;
 
     public MasterVehicleExportRow(String makeId, String makeName, String makeNameAr, Long modelId, String modelName,
-                                  String modelNameAr, Long typeId, String typeName) {
+                                  String modelNameAr, Long typeId, String typeName, String kindCode, String kindEnDesc,
+                                  String kindArDesc) {
         this.makeId = makeId;
         this.makeName = makeName;
         this.makeNameAr = makeNameAr;
@@ -21,6 +25,9 @@ public class MasterVehicleExportRow {
         this.modelNameAr = modelNameAr;
         this.typeId = typeId;
         this.typeName = typeName;
+        this.kindCode = kindCode;
+        this.kindEnDesc = kindEnDesc;
+        this.kindArDesc = kindArDesc;
     }
 
     public String getMakeId() {
@@ -53,5 +60,17 @@ public class MasterVehicleExportRow {
 
     public String getTypeName() {
         return typeName;
+    }
+
+    public String getKindCode() {
+        return kindCode;
+    }
+
+    public String getKindEnDesc() {
+        return kindEnDesc;
+    }
+
+    public String getKindArDesc() {
+        return kindArDesc;
     }
 }

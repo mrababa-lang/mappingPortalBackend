@@ -94,7 +94,10 @@ public class MasterVehicleController {
             "Model Name (En)",
             "Model Name (Ar)",
             "Type ID",
-            "Type Name"));
+            "Type Name",
+            "Kind Code",
+            "Kind Name (En)",
+            "Kind Name (Ar)"));
     }
 
     private void writeCsvRow(PrintWriter writer, MasterVehicleExportRow row) {
@@ -106,7 +109,10 @@ public class MasterVehicleController {
             escape(row.getModelName()),
             escape(row.getModelNameAr()),
             escape(row.getTypeId()),
-            escape(row.getTypeName())));
+            escape(row.getTypeName()),
+            escape(row.getKindCode()),
+            escape(row.getKindEnDesc()),
+            escape(row.getKindArDesc())));
     }
 
     private String escape(Object value) {
