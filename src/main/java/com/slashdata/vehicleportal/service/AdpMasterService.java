@@ -222,6 +222,8 @@ public class AdpMasterService {
                     value -> target.setModelEnDesc((String) value));
                 registerChange(changes, "modelArDesc", target.getModelArDesc(), source.getModelArDesc(),
                     value -> target.setModelArDesc((String) value));
+                registerChange(changes, "adpTypeId", target.getAdpTypeId(), source.getAdpTypeId(),
+                    value -> target.setAdpTypeId((String) value));
                 registerChange(changes, "typeEnDesc", target.getTypeEnDesc(), source.getTypeEnDesc(),
                     value -> target.setTypeEnDesc((String) value));
                 registerChange(changes, "typeArDesc", target.getTypeArDesc(), source.getTypeArDesc(),
@@ -291,7 +293,7 @@ public class AdpMasterService {
             incoming.setKindArDesc(normalizeValue(resolveValue(normalizedRow, "kindArDesc")));
 
             Optional<ADPMaster> existingOpt = adpMasterRepository
-                .findByAdpMakeIdAndAdpModelIdAndAdpTypeId(adpMakeId, adpModelId, adpTypeId);
+                .findByAdpMakeIdAndAdpModelId(adpMakeId, adpModelId);
             if (existingOpt.isPresent()) {
                 ADPMaster existing = existingOpt.get();
                 Map<String, Map<String, Object>> changes = applyUpdates(existing, incoming, UpdateMode.BULK_UPLOAD);
