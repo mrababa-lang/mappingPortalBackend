@@ -55,6 +55,10 @@ CREATE TABLE adp_master (
     type_ar_desc VARCHAR(200)
 );
 
+ALTER TABLE adp_master
+    ADD CONSTRAINT uq_adp_master_make_model UNIQUE (adp_make_id, adp_model_id),
+    ADD INDEX idx_adp_master_make_id (adp_make_id);
+
 CREATE TABLE adp_make_mappings (
     id CHAR(36) NOT NULL PRIMARY KEY,
     adp_make_id VARCHAR(50) NOT NULL UNIQUE,
@@ -100,6 +104,15 @@ CREATE TABLE adp_mapping_history (
     CONSTRAINT fk_adp_mapping_history_adp FOREIGN KEY (adp_id) REFERENCES adp_master (id),
     CONSTRAINT fk_adp_mapping_history_mapping FOREIGN KEY (mapping_id) REFERENCES adp_mappings (id),
     CONSTRAINT fk_adp_mapping_history_user FOREIGN KEY (user_id) REFERENCES users (id)
+);
+
+CREATE TABLE adp_history (
+    id CHAR(36) NOT NULL PRIMARY KEY,
+    adp_id CHAR(36) NOT NULL,
+    action VARCHAR(20) NOT NULL,
+    details VARCHAR(2000),
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_adp_history_adp FOREIGN KEY (adp_id) REFERENCES adp_master (id)
 );
 
 CREATE TABLE app_config (
@@ -166,6 +179,12 @@ INSERT INTO adp_mapping_history (id, adp_id, mapping_id, action, details, user_i
 VALUES
   ('dddddddd-dddd-dddd-dddd-dddddddddddd', '55555555-5555-5555-5555-555555555555', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'CREATED', 'Initial mapping created by admin', 1),
   ('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', '66666666-6666-6666-6666-666666666666', 'cccccccc-cccc-cccc-cccc-cccccccccccc', 'REVIEWED', 'Mapping reviewed and approved', 2);
+
+-- ADP master history
+INSERT INTO adp_history (id, adp_id, action, details)
+VALUES
+  ('ffffffff-ffff-ffff-ffff-ffffffffffff', '55555555-5555-5555-5555-555555555555', 'CREATED', '{"adpMakeId":"ADP-MAKE-001","adpModelId":"ADP-MODEL-001"}'),
+  ('abababab-abab-abab-abab-abababababab', '66666666-6666-6666-6666-666666666666', 'UPDATED', '{"makeEnDesc":{"from":"Toyota","to":"Toyota"}}');
 
 -- App configuration
 INSERT INTO app_config (enable_ai, api_key, ai_confidence_threshold, maintenance_mode, enable_audit_log)

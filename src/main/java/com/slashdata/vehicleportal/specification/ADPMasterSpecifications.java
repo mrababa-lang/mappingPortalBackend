@@ -17,10 +17,8 @@ public final class ADPMasterSpecifications {
             return cb.or(
                 cb.like(cb.lower(root.get("adpMakeId")), like),
                 cb.like(cb.lower(root.get("adpModelId")), like),
-                cb.like(cb.lower(root.get("adpTypeId")), like),
                 cb.like(cb.lower(root.get("makeEnDesc")), like),
-                cb.like(cb.lower(root.get("modelEnDesc")), like),
-                cb.like(cb.lower(root.get("typeEnDesc")), like)
+                cb.like(cb.lower(root.get("modelEnDesc")), like)
             );
         };
     }
