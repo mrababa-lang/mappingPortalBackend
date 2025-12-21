@@ -112,6 +112,9 @@ public class AdpMasterService {
         details.put("adpTypeId", master.getAdpTypeId());
         details.put("typeEnDesc", master.getTypeEnDesc());
         details.put("typeArDesc", master.getTypeArDesc());
+        details.put("kindCode", master.getKindCode());
+        details.put("kindEnDesc", master.getKindEnDesc());
+        details.put("kindArDesc", master.getKindArDesc());
         return details;
     }
 
@@ -137,6 +140,12 @@ public class AdpMasterService {
                     value -> target.setTypeEnDesc((String) value));
                 registerChange(changes, "typeArDesc", target.getTypeArDesc(), source.getTypeArDesc(),
                     value -> target.setTypeArDesc((String) value));
+                registerChange(changes, "kindCode", target.getKindCode(), source.getKindCode(),
+                    value -> target.setKindCode((String) value));
+                registerChange(changes, "kindEnDesc", target.getKindEnDesc(), source.getKindEnDesc(),
+                    value -> target.setKindEnDesc((String) value));
+                registerChange(changes, "kindArDesc", target.getKindArDesc(), source.getKindArDesc(),
+                    value -> target.setKindArDesc((String) value));
             }
             case SYNC_ONLY -> {
                 registerChange(changes, "makeEnDesc", target.getMakeEnDesc(), source.getMakeEnDesc(),
@@ -153,6 +162,12 @@ public class AdpMasterService {
                     value -> target.setTypeEnDesc((String) value));
                 registerChange(changes, "typeArDesc", target.getTypeArDesc(), source.getTypeArDesc(),
                     value -> target.setTypeArDesc((String) value));
+                registerChange(changes, "kindCode", target.getKindCode(), source.getKindCode(),
+                    value -> target.setKindCode((String) value));
+                registerChange(changes, "kindEnDesc", target.getKindEnDesc(), source.getKindEnDesc(),
+                    value -> target.setKindEnDesc((String) value));
+                registerChange(changes, "kindArDesc", target.getKindArDesc(), source.getKindArDesc(),
+                    value -> target.setKindArDesc((String) value));
             }
         }
         return changes;

@@ -47,6 +47,9 @@ public class AdpPublicController {
         .addColumn("adpTypeId")
         .addColumn("typeEnDesc")
         .addColumn("typeArDesc")
+        .addColumn("kindCode")
+        .addColumn("kindEnDesc")
+        .addColumn("kindArDesc")
         .setUseHeader(true)
         .setColumnSeparator(',')
         .build();
