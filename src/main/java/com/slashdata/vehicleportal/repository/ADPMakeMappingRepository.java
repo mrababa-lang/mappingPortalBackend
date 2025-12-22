@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 public interface ADPMakeMappingRepository extends JpaRepository<ADPMakeMapping, String> {
-    Optional<ADPMakeMapping> findByAdpMakeId(String adpMakeId);
+    Optional<ADPMakeMapping> findTopByAdpMakeIdOrderByUpdatedAtDesc(String adpMakeId);
 
     @Query("SELECT COUNT(DISTINCT m.adpMakeId) FROM ADPMakeMapping m")
     long countDistinctMappedAdpMakeId();
