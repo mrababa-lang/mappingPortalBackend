@@ -1,9 +1,13 @@
 package com.slashdata.vehicleportal.service;
 
 import com.slashdata.vehicleportal.dto.AdpMappingRequest;
+import com.slashdata.vehicleportal.dto.AuditRequestContext;
 import com.slashdata.vehicleportal.entity.ADPMapping;
 import com.slashdata.vehicleportal.entity.ADPMappingHistory;
 import com.slashdata.vehicleportal.entity.ADPMaster;
+import com.slashdata.vehicleportal.entity.AuditAction;
+import com.slashdata.vehicleportal.entity.AuditEntityType;
+import com.slashdata.vehicleportal.entity.AuditSource;
 import com.slashdata.vehicleportal.entity.Make;
 import com.slashdata.vehicleportal.entity.MappingStatus;
 import com.slashdata.vehicleportal.entity.Model;
@@ -16,7 +20,9 @@ import com.slashdata.vehicleportal.repository.ModelRepository;
 import com.slashdata.vehicleportal.repository.UserRepository;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -35,11 +41,12 @@ public class AdpMappingService {
     private final UserRepository userRepository;
     private final ADPMappingHistoryRepository historyRepository;
     private final DashboardStatsService dashboardStatsService;
+    private final AuditLogService auditLogService;
 
     public AdpMappingService(ADPMappingRepository adpMappingRepository, ADPMasterRepository adpMasterRepository,
                              MakeRepository makeRepository, ModelRepository modelRepository,
                              UserRepository userRepository, ADPMappingHistoryRepository historyRepository,
-                             DashboardStatsService dashboardStatsService) {
+                             DashboardStatsService dashboardStatsService, AuditLogService auditLogService) {
         this.adpMappingRepository = adpMappingRepository;
         this.adpMasterRepository = adpMasterRepository;
         this.makeRepository = makeRepository;
@@ -47,10 +54,11 @@ public class AdpMappingService {
         this.userRepository = userRepository;
         this.historyRepository = historyRepository;
         this.dashboardStatsService = dashboardStatsService;
+        this.auditLogService = auditLogService;
     }
 
     @Transactional
-    public int createMissingModelMappingsForMake(String adpMakeId, Make sdMake) {
+    public int createMissingModelMappingsForMake(String adpMakeId, Make sdMake, AuditRequestContext context) {
         if (adpMakeId == null || adpMakeId.isBlank() || sdMake == null) {
             return 0;
         }
@@ -86,13 +94,17 @@ public class AdpMappingService {
         }
 
         List<ADPMapping> saved = adpMappingRepository.saveAll(newMappings);
-        saved.forEach(mapping -> persistHistory(mapping, null, "CREATED"));
+        saved.forEach(mapping -> {
+            persistHistory(mapping, null, "CREATED");
+            auditLogService.logChange(AuditEntityType.MAPPING, mapping.getId(), AuditAction.CREATE, AuditSource.BULK,
+                null, null, mappingSnapshot(mapping), context);
+        });
         dashboardStatsService.recalculateDashboardAsync();
         return saved.size();
     }
 
     @Transactional
-    public ADPMapping upsert(String adpId, AdpMappingRequest request, User actor) {
+    public ADPMapping upsert(String adpId, AdpMappingRequest request, User actor, AuditRequestContext context) {
         if (request.getStatus() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Status is required");
         }
@@ -106,6 +118,7 @@ public class AdpMappingService {
         validateBelongsToMake(desiredStatus, make, model);
 
         ADPMapping mapping = adpMappingRepository.findByAdpMasterId(master.getId()).orElse(new ADPMapping());
+        Map<String, Object> oldSnapshot = mapping.getId() == null ? null : mappingSnapshot(mapping);
         boolean isNew = mapping.getId() == null;
         mapping.setAdpMaster(master);
 
@@ -136,28 +149,38 @@ public class AdpMappingService {
 
         ADPMapping saved = adpMappingRepository.save(mapping);
         persistHistory(saved, actor, aiDriven ? "AI_MAPPED" : "MANUAL_UPDATE");
+        auditLogService.logChange(AuditEntityType.MAPPING, saved.getId(),
+            isNew ? AuditAction.CREATE : AuditAction.UPDATE,
+            aiDriven ? AuditSource.AI : AuditSource.MANUAL,
+            actor, oldSnapshot, mappingSnapshot(saved), context);
         dashboardStatsService.recalculateDashboardAsync();
         return saved;
     }
 
     @Transactional
-    public void approve(String adpId, User reviewer) {
+    public void approve(String adpId, User reviewer, AuditRequestContext context) {
         ADPMapping mapping = getMappingOrThrow(adpId);
+        Map<String, Object> oldSnapshot = mappingSnapshot(mapping);
         mapping.setReviewedAt(LocalDateTime.now());
         mapping.setReviewedBy(reviewer);
         adpMappingRepository.save(mapping);
         persistHistory(mapping, reviewer, "REVIEWED");
+        auditLogService.logChange(AuditEntityType.MAPPING, mapping.getId(), AuditAction.APPROVE, AuditSource.MANUAL,
+            reviewer, oldSnapshot, mappingSnapshot(mapping), context);
     }
 
     @Transactional
-    public void reject(String adpId, User actor) {
+    public void reject(String adpId, User actor, AuditRequestContext context) {
         ADPMapping mapping = getMappingOrThrow(adpId);
+        Map<String, Object> oldSnapshot = mappingSnapshot(mapping);
         persistHistory(mapping, actor, "REJECTED");
+        auditLogService.logChange(AuditEntityType.MAPPING, mapping.getId(), AuditAction.REJECT, AuditSource.MANUAL,
+            actor, oldSnapshot, null, context);
         adpMappingRepository.delete(mapping);
     }
 
     @Transactional
-    public void bulkApprove(List<String> ids, User reviewer) {
+    public void bulkApprove(List<String> ids, User reviewer, AuditRequestContext context) {
         if (ids == null || ids.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mapping ids are required");
         }
@@ -166,16 +189,22 @@ public class AdpMappingService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "One or more ADP mappings were not found");
         }
         LocalDateTime now = LocalDateTime.now();
+        Map<String, Map<String, Object>> snapshots = new LinkedHashMap<>();
         for (ADPMapping mapping : mappings) {
+            snapshots.put(mapping.getId(), mappingSnapshot(mapping));
             mapping.setReviewedAt(now);
             mapping.setReviewedBy(reviewer);
         }
         adpMappingRepository.saveAll(mappings);
-        mappings.forEach(mapping -> persistHistory(mapping, reviewer, "REVIEWED"));
+        mappings.forEach(mapping -> {
+            persistHistory(mapping, reviewer, "REVIEWED");
+            auditLogService.logChange(AuditEntityType.MAPPING, mapping.getId(), AuditAction.APPROVE, AuditSource.BULK,
+                reviewer, snapshots.get(mapping.getId()), mappingSnapshot(mapping), context);
+        });
     }
 
     @Transactional
-    public void bulkReject(List<String> ids, User actor) {
+    public void bulkReject(List<String> ids, User actor, AuditRequestContext context) {
         if (ids == null || ids.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mapping ids are required");
         }
@@ -183,7 +212,11 @@ public class AdpMappingService {
         if (mappings.size() != ids.size()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "One or more ADP mappings were not found");
         }
-        mappings.forEach(mapping -> persistHistory(mapping, actor, "REJECTED"));
+        mappings.forEach(mapping -> {
+            persistHistory(mapping, actor, "REJECTED");
+            auditLogService.logChange(AuditEntityType.MAPPING, mapping.getId(), AuditAction.REJECT, AuditSource.BULK,
+                actor, mappingSnapshot(mapping), null, context);
+        });
         adpMappingRepository.deleteAllById(ids);
     }
 
@@ -300,5 +333,25 @@ public class AdpMappingService {
         String auto = mapping.getAutoPropagated() != null && mapping.getAutoPropagated() ? "auto" : "manual";
         return String.format("Status=%s, Make=%s, Model=%s, Engine=%s, Propagation=%s",
             mapping.getStatus(), makeName, modelName, engine, auto);
+    }
+
+    private Map<String, Object> mappingSnapshot(ADPMapping mapping) {
+        if (mapping == null) {
+            return null;
+        }
+        Map<String, Object> snapshot = new LinkedHashMap<>();
+        snapshot.put("id", mapping.getId());
+        snapshot.put("adpMasterId", mapping.getAdpMaster() != null ? mapping.getAdpMaster().getId() : null);
+        snapshot.put("makeId", mapping.getMake() != null ? mapping.getMake().getId() : null);
+        snapshot.put("modelId", mapping.getModel() != null ? mapping.getModel().getId() : null);
+        snapshot.put("status", mapping.getStatus());
+        snapshot.put("aiConfidence", mapping.getAiConfidence());
+        snapshot.put("matchingEngine", mapping.getMatchingEngine());
+        snapshot.put("autoPropagated", mapping.getAutoPropagated());
+        snapshot.put("updatedAt", mapping.getUpdatedAt());
+        snapshot.put("updatedBy", mapping.getUpdatedBy() != null ? mapping.getUpdatedBy().getId() : null);
+        snapshot.put("reviewedAt", mapping.getReviewedAt());
+        snapshot.put("reviewedBy", mapping.getReviewedBy() != null ? mapping.getReviewedBy().getId() : null);
+        return snapshot;
     }
 }

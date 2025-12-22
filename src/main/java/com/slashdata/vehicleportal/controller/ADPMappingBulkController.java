@@ -2,8 +2,10 @@ package com.slashdata.vehicleportal.controller;
 
 import com.slashdata.vehicleportal.dto.ApiResponse;
 import com.slashdata.vehicleportal.dto.BulkActionRequest;
+import com.slashdata.vehicleportal.dto.AuditRequestContext;
 import com.slashdata.vehicleportal.entity.User;
 import com.slashdata.vehicleportal.service.AdpMappingService;
+import jakarta.servlet.http.HttpServletRequest;
 import java.security.Principal;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -26,11 +28,13 @@ public class ADPMappingBulkController {
     }
 
     @PostMapping({ "", "/" })
-    public ResponseEntity<ApiResponse<String>> bulk(@RequestBody BulkActionRequest request, Principal principal) {
+    public ResponseEntity<ApiResponse<String>> bulk(@RequestBody BulkActionRequest request, Principal principal,
+                                                    HttpServletRequest httpRequest) {
         User actor = adpMappingService.findUser(principal != null ? principal.getName() : null);
+        AuditRequestContext context = AuditRequestContext.from(httpRequest);
         switch (request.getAction()) {
-            case APPROVE -> adpMappingService.bulkApprove(request.getIds(), actor);
-            case REJECT -> adpMappingService.bulkReject(request.getIds(), actor);
+            case APPROVE -> adpMappingService.bulkApprove(request.getIds(), actor, context);
+            case REJECT -> adpMappingService.bulkReject(request.getIds(), actor, context);
             default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported bulk action");
         }
         return ResponseEntity.ok(ApiResponse.of("OK"));

@@ -4,6 +4,7 @@ import com.slashdata.vehicleportal.dto.AdpMappingRequest;
 import com.slashdata.vehicleportal.dto.AdpMappingViewDto;
 import com.slashdata.vehicleportal.dto.ApiResponse;
 import com.slashdata.vehicleportal.dto.PagedResponse;
+import com.slashdata.vehicleportal.dto.AuditRequestContext;
 import com.slashdata.vehicleportal.entity.ADPMapping;
 import com.slashdata.vehicleportal.entity.MappingStatus;
 import com.slashdata.vehicleportal.entity.User;
@@ -11,6 +12,7 @@ import java.time.LocalDate;
 import com.slashdata.vehicleportal.repository.ADPMappingRepository;
 import com.slashdata.vehicleportal.service.AdpMappingService;
 import com.slashdata.vehicleportal.specification.ADPMappingSpecifications;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.security.Principal;
 import java.time.LocalDateTime;
@@ -80,9 +82,9 @@ public class ADPMappingController {
     @PutMapping("/{adpId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_USER')")
     public ApiResponse<ADPMapping> upsert(@PathVariable String adpId, @Valid @RequestBody AdpMappingRequest request,
-                                          Principal principal) {
+                                          Principal principal, HttpServletRequest httpRequest) {
         User actor = adpMappingService.findUser(principal != null ? principal.getName() : null);
-        return ApiResponse.of(adpMappingService.upsert(adpId, request, actor));
+        return ApiResponse.of(adpMappingService.upsert(adpId, request, actor, AuditRequestContext.from(httpRequest)));
     }
 
     @GetMapping("/review")
@@ -97,36 +99,37 @@ public class ADPMappingController {
 
     @PostMapping("/{adpId}/approve")
     @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_ADMIN')")
-    public ResponseEntity<Void> approve(@PathVariable String adpId, Principal principal) {
+    public ResponseEntity<Void> approve(@PathVariable String adpId, Principal principal, HttpServletRequest httpRequest) {
         if (adpId == null || adpId.isBlank() || "undefined".equalsIgnoreCase(adpId)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ADP mapping id is required");
         }
 
         User reviewer = adpMappingService.findUser(principal != null ? principal.getName() : null);
-        adpMappingService.approve(adpId, reviewer);
+        adpMappingService.approve(adpId, reviewer, AuditRequestContext.from(httpRequest));
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{adpId}/reject")
     @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_ADMIN')")
-    public ResponseEntity<Void> reject(@PathVariable String adpId, Principal principal) {
-        rejectMapping(adpId, principal);
+    public ResponseEntity<Void> reject(@PathVariable String adpId, Principal principal, HttpServletRequest httpRequest) {
+        rejectMapping(adpId, principal, httpRequest);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/{adpId}/reject")
     @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_ADMIN')")
-    public ResponseEntity<Void> rejectViaPost(@PathVariable String adpId, Principal principal) {
-        rejectMapping(adpId, principal);
+    public ResponseEntity<Void> rejectViaPost(@PathVariable String adpId, Principal principal,
+                                              HttpServletRequest httpRequest) {
+        rejectMapping(adpId, principal, httpRequest);
         return ResponseEntity.ok().build();
     }
 
-    private void rejectMapping(String adpId, Principal principal) {
+    private void rejectMapping(String adpId, Principal principal, HttpServletRequest httpRequest) {
         if (adpId == null || adpId.isBlank() || "undefined".equalsIgnoreCase(adpId)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ADP mapping id is required");
         }
         User actor = adpMappingService.findUser(principal != null ? principal.getName() : null);
-        adpMappingService.reject(adpId, actor);
+        adpMappingService.reject(adpId, actor, AuditRequestContext.from(httpRequest));
     }
 
     private MappingStatus parseMappingStatus(String mappingType) {

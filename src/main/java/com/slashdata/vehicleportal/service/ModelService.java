@@ -2,8 +2,13 @@ package com.slashdata.vehicleportal.service;
 
 import com.slashdata.vehicleportal.dto.BulkUploadResult;
 import com.slashdata.vehicleportal.dto.ModelRequest;
+import com.slashdata.vehicleportal.dto.AuditRequestContext;
+import com.slashdata.vehicleportal.entity.AuditAction;
+import com.slashdata.vehicleportal.entity.AuditEntityType;
+import com.slashdata.vehicleportal.entity.AuditSource;
 import com.slashdata.vehicleportal.entity.Make;
 import com.slashdata.vehicleportal.entity.Model;
+import com.slashdata.vehicleportal.entity.User;
 import com.slashdata.vehicleportal.entity.VehicleType;
 import com.slashdata.vehicleportal.repository.ADPMappingRepository;
 import com.slashdata.vehicleportal.repository.MakeRepository;
@@ -14,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -27,16 +33,19 @@ public class ModelService {
     private final ADPMappingRepository adpMappingRepository;
     private final MakeRepository makeRepository;
     private final VehicleTypeRepository vehicleTypeRepository;
+    private final AuditLogService auditLogService;
 
     public ModelService(ModelRepository modelRepository, ADPMappingRepository adpMappingRepository,
-                       MakeRepository makeRepository, VehicleTypeRepository vehicleTypeRepository) {
+                       MakeRepository makeRepository, VehicleTypeRepository vehicleTypeRepository,
+                       AuditLogService auditLogService) {
         this.modelRepository = modelRepository;
         this.adpMappingRepository = adpMappingRepository;
         this.makeRepository = makeRepository;
         this.vehicleTypeRepository = vehicleTypeRepository;
+        this.auditLogService = auditLogService;
     }
 
-    public Model create(ModelRequest request) {
+    public Model create(ModelRequest request, User actor, AuditRequestContext context) {
         Make make = makeRepository.findById(request.getMakeId()).orElseThrow();
         VehicleType vehicleType = vehicleTypeRepository.findById(request.getTypeId()).orElseThrow();
 
@@ -51,11 +60,15 @@ public class ModelService {
         model.setName(request.getName());
         model.setNameAr(request.getNameAr());
 
-        return modelRepository.save(model);
+        Model saved = modelRepository.save(model);
+        auditLogService.logChange(AuditEntityType.SD_MODEL, String.valueOf(saved.getId()), AuditAction.CREATE,
+            AuditSource.MANUAL, actor, null, modelSnapshot(saved), context);
+        return saved;
     }
 
-    public Model update(Long id, ModelRequest request) {
+    public Model update(Long id, ModelRequest request, User actor, AuditRequestContext context) {
         Model existingModel = modelRepository.findById(id).orElseThrow();
+        Map<String, Object> oldSnapshot = modelSnapshot(existingModel);
         if (request.getId() != null && !id.equals(request.getId())) {
             throw new IllegalArgumentException("Model ID cannot be changed");
         }
@@ -73,11 +86,14 @@ public class ModelService {
         existingModel.setType(vehicleType);
         existingModel.setName(request.getName());
         existingModel.setNameAr(request.getNameAr());
-        return modelRepository.save(existingModel);
+        Model saved = modelRepository.save(existingModel);
+        auditLogService.logChange(AuditEntityType.SD_MODEL, String.valueOf(saved.getId()), AuditAction.UPDATE,
+            AuditSource.MANUAL, actor, oldSnapshot, modelSnapshot(saved), context);
+        return saved;
     }
 
     @Transactional
-    public BulkUploadResult<Model> bulkCreate(List<ModelRequest> requests) {
+    public BulkUploadResult<Model> bulkCreate(List<ModelRequest> requests, User actor, AuditRequestContext context) {
         if (requests == null || requests.isEmpty()) {
             return new BulkUploadResult<>(List.of(), 0, 0,
                 "No models were uploaded because the payload was empty.", List.of("No model records were provided."));
@@ -153,6 +169,8 @@ public class ModelService {
         }
 
         List<Model> savedModels = models.isEmpty() ? List.of() : modelRepository.saveAll(models);
+        savedModels.forEach(saved -> auditLogService.logChange(AuditEntityType.SD_MODEL, String.valueOf(saved.getId()),
+            AuditAction.CREATE, AuditSource.BULK, actor, null, modelSnapshot(saved), context));
 
         List<String> reasons = new ArrayList<>(skipReasons);
         if (duplicateModels > 0) {
@@ -182,9 +200,25 @@ public class ModelService {
     }
 
     @Transactional
-    public void deleteModel(Long id) {
+    public void deleteModel(Long id, User actor, AuditRequestContext context) {
         Model model = modelRepository.findById(id).orElseThrow();
+        Map<String, Object> oldSnapshot = modelSnapshot(model);
         adpMappingRepository.clearModelsFromMappings(java.util.List.of(model.getId()), LocalDateTime.now());
         modelRepository.delete(model);
+        auditLogService.logChange(AuditEntityType.SD_MODEL, String.valueOf(id), AuditAction.DELETE, AuditSource.MANUAL,
+            actor, oldSnapshot, null, context);
+    }
+
+    private Map<String, Object> modelSnapshot(Model model) {
+        if (model == null) {
+            return null;
+        }
+        Map<String, Object> snapshot = new LinkedHashMap<>();
+        snapshot.put("id", model.getId());
+        snapshot.put("makeId", model.getMake() != null ? model.getMake().getId() : null);
+        snapshot.put("typeId", model.getType() != null ? model.getType().getId() : null);
+        snapshot.put("name", model.getName());
+        snapshot.put("nameAr", model.getNameAr());
+        return snapshot;
     }
 }

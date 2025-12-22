@@ -1,0 +1,29 @@
+Database changes required for audit & tracking
+
+1) Create audit_logs table
+
+CREATE TABLE audit_logs (
+    id CHAR(36) PRIMARY KEY,
+    entity_type VARCHAR(20) NOT NULL,
+    entity_id VARCHAR(100) NOT NULL,
+    action VARCHAR(20) NOT NULL,
+    source VARCHAR(20) NOT NULL,
+    user_id BIGINT NULL,
+    old_values TEXT NULL,
+    new_values TEXT NULL,
+    ip_address VARCHAR(100) NULL,
+    user_agent VARCHAR(500) NULL,
+    timestamp DATETIME NOT NULL,
+    CONSTRAINT fk_audit_logs_user FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+2) Suggested indexes for filtering and history lookup
+
+CREATE INDEX idx_audit_logs_entity ON audit_logs(entity_type, entity_id, timestamp);
+CREATE INDEX idx_audit_logs_user ON audit_logs(user_id, timestamp);
+CREATE INDEX idx_audit_logs_source ON audit_logs(source, timestamp);
+
+Notes:
+- enum values expected for entity_type: ADP_MASTER, SD_MAKE, SD_MODEL, MAPPING
+- enum values expected for action: CREATE, UPDATE, DELETE, APPROVE, REJECT
+- enum values expected for source: MANUAL, AI, BULK
