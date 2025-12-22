@@ -274,7 +274,7 @@ public class AdpMasterService {
             String adpModelId = normalizeValue(resolveValue(normalizedRow, "adpModelId"));
             String adpTypeId = normalizeValue(resolveValue(normalizedRow, "adpTypeId"));
 
-            if (isBlank(adpMakeId) || isBlank(adpModelId) || isBlank(adpTypeId)) {
+            if (isBlank(adpMakeId) || isBlank(adpModelId)) {
                 return UploadResult.skipped();
             }
 
