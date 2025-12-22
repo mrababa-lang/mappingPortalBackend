@@ -76,6 +76,10 @@ public class ADPUniqueController {
     @PostMapping("/makes/map")
     @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_ADMIN')")
     public ApiResponse<ADPMakeMapping> mapMake(@Valid @RequestBody AdpMakeMapRequest request) {
+        if (request.getAdpMakeId() == null || request.getAdpMakeId().isBlank()
+            || request.getSdMakeId() == null || request.getSdMakeId().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ADP make id and SD make id are required");
+        }
         Make sdMake = makeRepository.findById(request.getSdMakeId())
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "SD make not found"));
 
@@ -102,6 +106,10 @@ public class ADPUniqueController {
     @PostMapping("/types/map")
     @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_ADMIN')")
     public ApiResponse<ADPTypeMapping> mapType(@Valid @RequestBody AdpTypeMapRequest request) {
+        if (request.getAdpTypeId() == null || request.getAdpTypeId().isBlank()
+            || request.getSdTypeId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ADP type id and SD type id are required");
+        }
         VehicleType sdType = vehicleTypeRepository.findById(request.getSdTypeId())
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "SD vehicle type not found"));
 
