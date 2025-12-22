@@ -3,13 +3,18 @@ package com.slashdata.vehicleportal.controller;
 import com.slashdata.vehicleportal.dto.ApiResponse;
 import com.slashdata.vehicleportal.dto.AdpMasterBulkSyncResponse;
 import com.slashdata.vehicleportal.dto.PagedResponse;
+import com.slashdata.vehicleportal.dto.AuditRequestContext;
 import com.slashdata.vehicleportal.entity.ADPMaster;
 import com.slashdata.vehicleportal.entity.MappingStatus;
+import com.slashdata.vehicleportal.entity.User;
 import com.slashdata.vehicleportal.repository.ADPMasterRepository;
 import com.slashdata.vehicleportal.service.AdpMasterService;
+import com.slashdata.vehicleportal.service.UserLookupService;
+import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.security.Principal;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -32,10 +37,13 @@ public class ADPMasterController {
 
     private final ADPMasterRepository adpMasterRepository;
     private final AdpMasterService adpMasterService;
+    private final UserLookupService userLookupService;
 
-    public ADPMasterController(ADPMasterRepository adpMasterRepository, AdpMasterService adpMasterService) {
+    public ADPMasterController(ADPMasterRepository adpMasterRepository, AdpMasterService adpMasterService,
+                               UserLookupService userLookupService) {
         this.adpMasterRepository = adpMasterRepository;
         this.adpMasterService = adpMasterService;
+        this.userLookupService = userLookupService;
     }
 
     @GetMapping
@@ -71,18 +79,24 @@ public class ADPMasterController {
     }
 
     @PostMapping
-    public ApiResponse<ADPMaster> create(@RequestBody ADPMaster request) {
-        return ApiResponse.of(adpMasterService.create(request));
+    public ApiResponse<ADPMaster> create(@RequestBody ADPMaster request, Principal principal,
+                                         HttpServletRequest httpRequest) {
+        User actor = userLookupService.findByPrincipal(principal);
+        return ApiResponse.of(adpMasterService.create(request, actor, AuditRequestContext.from(httpRequest)));
     }
 
     @PutMapping("/{id}")
-    public ApiResponse<ADPMaster> update(@PathVariable String id, @RequestBody ADPMaster request) {
-        return ApiResponse.of(adpMasterService.update(id, request));
+    public ApiResponse<ADPMaster> update(@PathVariable String id, @RequestBody ADPMaster request,
+                                         Principal principal, HttpServletRequest httpRequest) {
+        User actor = userLookupService.findByPrincipal(principal);
+        return ApiResponse.of(adpMasterService.update(id, request, actor, AuditRequestContext.from(httpRequest)));
     }
 
     @PostMapping("/bulk")
-    public ApiResponse<AdpMasterBulkSyncResponse> bulkSync(@RequestBody List<ADPMaster> records) {
-        return ApiResponse.of(adpMasterService.bulkSync(records));
+    public ApiResponse<AdpMasterBulkSyncResponse> bulkSync(@RequestBody List<ADPMaster> records,
+                                                           Principal principal, HttpServletRequest httpRequest) {
+        User actor = userLookupService.findByPrincipal(principal);
+        return ApiResponse.of(adpMasterService.bulkSync(records, actor, AuditRequestContext.from(httpRequest)));
     }
 
     private String normalizeQuery(String query) {

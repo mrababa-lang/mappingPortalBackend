@@ -5,11 +5,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.slashdata.vehicleportal.dto.ApiResponse;
 import com.slashdata.vehicleportal.dto.BulkUploadResult;
 import com.slashdata.vehicleportal.dto.ModelRequest;
+import com.slashdata.vehicleportal.dto.AuditRequestContext;
 import com.slashdata.vehicleportal.entity.Model;
+import com.slashdata.vehicleportal.entity.User;
 import com.slashdata.vehicleportal.service.ModelService;
+import com.slashdata.vehicleportal.service.UserLookupService;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.security.Principal;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -27,17 +32,24 @@ public class ModelBulkController {
 
     private final ModelService modelService;
     private final ObjectMapper objectMapper;
+    private final UserLookupService userLookupService;
 
-    public ModelBulkController(ModelService modelService, ObjectMapper objectMapper) {
+    public ModelBulkController(ModelService modelService, ObjectMapper objectMapper,
+                               UserLookupService userLookupService) {
         this.modelService = modelService;
         this.objectMapper = objectMapper;
+        this.userLookupService = userLookupService;
     }
 
     @PostMapping(consumes = {MediaType.APPLICATION_JSON_VALUE, "text/csv"})
     public ResponseEntity<ApiResponse<BulkUploadResult<Model>>> bulkCreate(@RequestBody String payload,
-                                                                           @RequestHeader(HttpHeaders.CONTENT_TYPE) String contentType)
+                                                                           @RequestHeader(HttpHeaders.CONTENT_TYPE) String contentType,
+                                                                           Principal principal,
+                                                                           HttpServletRequest request)
     {
-        return ResponseEntity.ok(ApiResponse.of(modelService.bulkCreate(parsePayload(payload, contentType))));
+        User actor = userLookupService.findByPrincipal(principal);
+        return ResponseEntity.ok(ApiResponse.of(modelService.bulkCreate(parsePayload(payload, contentType), actor,
+            AuditRequestContext.from(request))));
     }
 
     private List<ModelRequest> parsePayload(String payload, String contentType) {

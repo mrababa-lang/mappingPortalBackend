@@ -1,14 +1,13 @@
 package com.slashdata.vehicleportal.controller;
 
-import com.slashdata.vehicleportal.dto.AdpHistoryEntryDto;
 import com.slashdata.vehicleportal.dto.ApiResponse;
-import com.slashdata.vehicleportal.entity.ADPHistory;
-import com.slashdata.vehicleportal.entity.ADPMappingHistory;
-import com.slashdata.vehicleportal.repository.ADPHistoryRepository;
-import com.slashdata.vehicleportal.repository.ADPMappingHistoryRepository;
-import java.util.Comparator;
+import com.slashdata.vehicleportal.dto.AuditLogDto;
+import com.slashdata.vehicleportal.entity.AuditEntityType;
+import com.slashdata.vehicleportal.entity.AuditLog;
+import com.slashdata.vehicleportal.repository.ADPMappingRepository;
+import com.slashdata.vehicleportal.repository.AuditLogRepository;
+import com.slashdata.vehicleportal.service.AuditLogService;
 import java.util.List;
-import java.util.stream.Stream;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,42 +21,36 @@ import org.springframework.web.server.ResponseStatusException;
 @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_USER', 'MAPPING_ADMIN')")
 public class ADPHistoryController {
 
-    private final ADPHistoryRepository adpHistoryRepository;
-    private final ADPMappingHistoryRepository adpMappingHistoryRepository;
+    private final AuditLogRepository auditLogRepository;
+    private final AuditLogService auditLogService;
+    private final ADPMappingRepository adpMappingRepository;
 
-    public ADPHistoryController(ADPHistoryRepository adpHistoryRepository,
-                                ADPMappingHistoryRepository adpMappingHistoryRepository) {
-        this.adpHistoryRepository = adpHistoryRepository;
-        this.adpMappingHistoryRepository = adpMappingHistoryRepository;
+    public ADPHistoryController(AuditLogRepository auditLogRepository,
+                                AuditLogService auditLogService,
+                                ADPMappingRepository adpMappingRepository) {
+        this.auditLogRepository = auditLogRepository;
+        this.auditLogService = auditLogService;
+        this.adpMappingRepository = adpMappingRepository;
     }
 
     @GetMapping("/{adpId}")
-    public ApiResponse<List<AdpHistoryEntryDto>> getHistory(@PathVariable String adpId) {
+    public ApiResponse<List<AuditLogDto>> getHistory(@PathVariable String adpId) {
         if (adpId == null || adpId.isBlank() || "undefined".equalsIgnoreCase(adpId)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ADP id is required");
         }
 
-        List<AdpHistoryEntryDto> entries = Stream.concat(
-                adpHistoryRepository.findByAdpMaster_IdOrderByCreatedAtDesc(adpId).stream()
-                    .map(this::fromMasterHistory),
-                adpMappingHistoryRepository.findByAdpMaster_IdOrderByCreatedAtDesc(adpId).stream()
-                    .map(this::fromMappingHistory))
-            .sorted(Comparator.comparing(AdpHistoryEntryDto::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder()))
-                .reversed())
-            .toList();
+        List<AuditLog> masterLogs = auditLogRepository
+            .findByEntityIdAndEntityTypeOrderByTimestampAsc(adpId, AuditEntityType.ADP_MASTER);
+        List<AuditLog> mappingLogs = adpMappingRepository
+            .findByAdpMasterId(adpId)
+            .map(mapping -> auditLogRepository.findByEntityIdAndEntityTypeOrderByTimestampAsc(
+                mapping.getId(), AuditEntityType.MAPPING))
+            .orElse(List.of());
 
-        return ApiResponse.of(entries);
-    }
+        List<AuditLog> combined = new java.util.ArrayList<>();
+        combined.addAll(masterLogs);
+        combined.addAll(mappingLogs);
 
-    private AdpHistoryEntryDto fromMasterHistory(ADPHistory history) {
-        return new AdpHistoryEntryDto(history.getId(), history.getAction(), history.getDetails(),
-            history.getCreatedAt(), "MASTER", null, null);
-    }
-
-    private AdpHistoryEntryDto fromMappingHistory(ADPMappingHistory history) {
-        String userEmail = history.getUser() != null ? history.getUser().getEmail() : null;
-        String mappingId = history.getMapping() != null ? history.getMapping().getId() : null;
-        return new AdpHistoryEntryDto(history.getId(), history.getAction(), history.getDetails(),
-            history.getCreatedAt(), "MAPPING", userEmail, mappingId);
+        return ApiResponse.of(auditLogService.getAuditHistory(combined));
     }
 }

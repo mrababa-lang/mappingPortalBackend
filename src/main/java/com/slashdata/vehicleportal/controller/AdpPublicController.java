@@ -8,11 +8,13 @@ import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import com.slashdata.vehicleportal.dto.AdpAttributeDto;
 import com.slashdata.vehicleportal.dto.AdpMasterBulkUploadResponse;
+import com.slashdata.vehicleportal.dto.AuditRequestContext;
 import com.slashdata.vehicleportal.dto.ApiResponse;
 import com.slashdata.vehicleportal.entity.ADPMaster;
 import com.slashdata.vehicleportal.repository.ADPMappingRepository;
 import com.slashdata.vehicleportal.repository.ADPMasterRepository;
 import com.slashdata.vehicleportal.service.AdpMasterService;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -98,8 +100,9 @@ public class AdpPublicController {
     }
 
     @PostMapping(value = "/master/bulk-upload", consumes = "application/json")
-    public ApiResponse<AdpMasterBulkUploadResponse> bulkUpload(@RequestBody List<Map<String, Object>> payload) {
-        return ApiResponse.of(adpMasterService.bulkUpload(payload));
+    public ApiResponse<AdpMasterBulkUploadResponse> bulkUpload(@RequestBody List<Map<String, Object>> payload,
+                                                               HttpServletRequest httpRequest) {
+        return ApiResponse.of(adpMasterService.bulkUpload(payload, null, AuditRequestContext.from(httpRequest)));
     }
 
     private List<AdpAttributeDto> extractDistinctAttributes(AttributeSelector selector) {

@@ -1,16 +1,22 @@
 package com.slashdata.vehicleportal.service;
 
 import com.slashdata.vehicleportal.dto.BulkUploadResult;
+import com.slashdata.vehicleportal.dto.AuditRequestContext;
+import com.slashdata.vehicleportal.entity.AuditAction;
+import com.slashdata.vehicleportal.entity.AuditEntityType;
+import com.slashdata.vehicleportal.entity.AuditSource;
 import com.slashdata.vehicleportal.entity.Make;
 import com.slashdata.vehicleportal.entity.Model;
+import com.slashdata.vehicleportal.entity.User;
 import com.slashdata.vehicleportal.repository.ADPMappingRepository;
 import com.slashdata.vehicleportal.repository.MakeRepository;
 import com.slashdata.vehicleportal.repository.ModelRepository;
 import java.time.LocalDateTime;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
@@ -24,25 +30,32 @@ public class MakeService {
     private final MakeRepository makeRepository;
     private final ModelRepository modelRepository;
     private final ADPMappingRepository adpMappingRepository;
+    private final AuditLogService auditLogService;
 
-    public MakeService(MakeRepository makeRepository, ModelRepository modelRepository, ADPMappingRepository adpMappingRepository) {
+    public MakeService(MakeRepository makeRepository, ModelRepository modelRepository,
+                       ADPMappingRepository adpMappingRepository, AuditLogService auditLogService) {
         this.makeRepository = makeRepository;
         this.modelRepository = modelRepository;
         this.adpMappingRepository = adpMappingRepository;
+        this.auditLogService = auditLogService;
     }
 
-    public Make create(Make make) {
+    public Make create(Make make, User actor, AuditRequestContext context) {
         if (makeRepository.existsByNameIgnoreCase(make.getName())) {
             throw new DataIntegrityViolationException("Make name already exists");
         }
         if (makeRepository.existsById(make.getId())) {
             throw new DataIntegrityViolationException("Make ID already exists");
         }
-        return makeRepository.save(make);
+        Make saved = makeRepository.save(make);
+        auditLogService.logChange(AuditEntityType.SD_MAKE, saved.getId(), AuditAction.CREATE, AuditSource.MANUAL,
+            actor, null, makeSnapshot(saved), context);
+        return saved;
     }
 
-    public Make update(String id, Make updatedMake) {
+    public Make update(String id, Make updatedMake, User actor, AuditRequestContext context) {
         Make existingMake = makeRepository.findById(id).orElseThrow();
+        Map<String, Object> oldSnapshot = makeSnapshot(existingMake);
         if (updatedMake.getId() != null && !id.equals(updatedMake.getId())) {
             throw new DataIntegrityViolationException("Make ID cannot be changed");
         }
@@ -53,7 +66,10 @@ public class MakeService {
 
         existingMake.setName(updatedMake.getName());
         existingMake.setNameAr(updatedMake.getNameAr());
-        return makeRepository.save(existingMake);
+        Make saved = makeRepository.save(existingMake);
+        auditLogService.logChange(AuditEntityType.SD_MAKE, saved.getId(), AuditAction.UPDATE, AuditSource.MANUAL,
+            actor, oldSnapshot, makeSnapshot(saved), context);
+        return saved;
     }
 
     public List<Make> findAll() {
@@ -65,7 +81,7 @@ public class MakeService {
     }
 
     @Transactional
-    public BulkUploadResult<Make> bulkSave(List<Make> makes) {
+    public BulkUploadResult<Make> bulkSave(List<Make> makes, User actor, AuditRequestContext context) {
         if (makes == null || makes.isEmpty()) {
             return new BulkUploadResult<>(List.of(), 0, 0,
                 "No makes were uploaded because the payload was empty.", List.of("No make records were provided."));
@@ -132,6 +148,8 @@ public class MakeService {
         }
 
         List<Make> savedMakes = makesToSave.isEmpty() ? List.of() : makeRepository.saveAll(makesToSave);
+        savedMakes.forEach(saved -> auditLogService.logChange(AuditEntityType.SD_MAKE, saved.getId(),
+            AuditAction.CREATE, AuditSource.BULK, actor, null, makeSnapshot(saved), context));
 
         List<String> reasons = new ArrayList<>(skipReasons);
         if (duplicateNames > 0) {
@@ -164,8 +182,9 @@ public class MakeService {
     }
 
     @Transactional
-    public void deleteMake(String id) {
+    public void deleteMake(String id, User actor, AuditRequestContext context) {
         Make make = makeRepository.findById(id).orElseThrow();
+        Map<String, Object> oldSnapshot = makeSnapshot(make);
         List<Model> models = modelRepository.findByMake(make);
         LocalDateTime now = LocalDateTime.now();
         if (!models.isEmpty()) {
@@ -174,5 +193,18 @@ public class MakeService {
         adpMappingRepository.clearMakeFromMappings(make.getId(), now);
         modelRepository.deleteAll(models);
         makeRepository.delete(make);
+        auditLogService.logChange(AuditEntityType.SD_MAKE, id, AuditAction.DELETE, AuditSource.MANUAL,
+            actor, oldSnapshot, null, context);
+    }
+
+    private Map<String, Object> makeSnapshot(Make make) {
+        if (make == null) {
+            return null;
+        }
+        Map<String, Object> snapshot = new LinkedHashMap<>();
+        snapshot.put("id", make.getId());
+        snapshot.put("name", make.getName());
+        snapshot.put("nameAr", make.getNameAr());
+        return snapshot;
     }
 }

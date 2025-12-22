@@ -4,8 +4,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.slashdata.vehicleportal.dto.AdpMasterBulkSyncResponse;
 import com.slashdata.vehicleportal.dto.AdpMasterBulkUploadResponse;
+import com.slashdata.vehicleportal.dto.AuditRequestContext;
 import com.slashdata.vehicleportal.entity.ADPHistory;
 import com.slashdata.vehicleportal.entity.ADPMaster;
+import com.slashdata.vehicleportal.entity.AuditAction;
+import com.slashdata.vehicleportal.entity.AuditEntityType;
+import com.slashdata.vehicleportal.entity.AuditSource;
+import com.slashdata.vehicleportal.entity.User;
 import com.slashdata.vehicleportal.repository.ADPHistoryRepository;
 import com.slashdata.vehicleportal.repository.ADPMasterRepository;
 import java.util.LinkedHashMap;
@@ -43,25 +48,31 @@ public class AdpMasterService {
     private final ADPMasterRepository adpMasterRepository;
     private final ADPHistoryRepository adpHistoryRepository;
     private final ObjectMapper objectMapper;
+    private final AuditLogService auditLogService;
 
     public AdpMasterService(ADPMasterRepository adpMasterRepository,
                             ADPHistoryRepository adpHistoryRepository,
-                            ObjectMapper objectMapper) {
+                            ObjectMapper objectMapper,
+                            AuditLogService auditLogService) {
         this.adpMasterRepository = adpMasterRepository;
         this.adpHistoryRepository = adpHistoryRepository;
         this.objectMapper = objectMapper;
+        this.auditLogService = auditLogService;
     }
 
-    public ADPMaster create(ADPMaster request) {
+    public ADPMaster create(ADPMaster request, User actor, AuditRequestContext context) {
         validateUniqueCombination(request.getAdpMakeId(), request.getAdpModelId(), null);
         ADPMaster saved = adpMasterRepository.save(request);
         recordHistory(saved, "CREATED", buildCreatedDetails(saved));
+        auditLogService.logChange(AuditEntityType.ADP_MASTER, saved.getId(), AuditAction.CREATE, AuditSource.MANUAL,
+            actor, null, masterSnapshot(saved), context);
         return saved;
     }
 
-    public ADPMaster update(String id, ADPMaster request) {
+    public ADPMaster update(String id, ADPMaster request, User actor, AuditRequestContext context) {
         ADPMaster existing = adpMasterRepository.findById(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "ADP master not found"));
+        Map<String, Object> oldSnapshot = masterSnapshot(existing);
         String effectiveMakeId = request.getAdpMakeId() != null ? request.getAdpMakeId() : existing.getAdpMakeId();
         String effectiveModelId = request.getAdpModelId() != null ? request.getAdpModelId() : existing.getAdpModelId();
         validateUniqueCombination(effectiveMakeId, effectiveModelId, existing.getId());
@@ -69,10 +80,12 @@ public class AdpMasterService {
         Map<String, Map<String, Object>> changes = applyUpdates(existing, request, UpdateMode.FULL);
         ADPMaster saved = adpMasterRepository.save(existing);
         recordHistory(saved, "UPDATED", changes);
+        auditLogService.logChange(AuditEntityType.ADP_MASTER, saved.getId(), AuditAction.UPDATE, AuditSource.MANUAL,
+            actor, oldSnapshot, masterSnapshot(saved), context);
         return saved;
     }
 
-    public AdpMasterBulkSyncResponse bulkSync(List<ADPMaster> records) {
+    public AdpMasterBulkSyncResponse bulkSync(List<ADPMaster> records, User actor, AuditRequestContext context) {
         if (records == null || records.isEmpty()) {
             return new AdpMasterBulkSyncResponse(0, 0, "No records provided.");
         }
@@ -92,6 +105,7 @@ public class AdpMasterService {
 
             if (existingOpt.isPresent()) {
                 ADPMaster existing = existingOpt.get();
+                Map<String, Object> oldSnapshot = masterSnapshot(existing);
                 Map<String, Map<String, Object>> changes = applyUpdates(existing, record, UpdateMode.SYNC_ONLY);
                 if (changes.isEmpty()) {
                     recordHistory(existing, "SYNCED", Map.of("message", "No changes"));
@@ -100,10 +114,14 @@ public class AdpMasterService {
                 }
                 adpMasterRepository.save(existing);
                 recordHistory(existing, "SYNCED", changes);
+                auditLogService.logChange(AuditEntityType.ADP_MASTER, existing.getId(), AuditAction.UPDATE,
+                    AuditSource.BULK, actor, oldSnapshot, masterSnapshot(existing), context);
                 updated++;
             } else {
                 ADPMaster saved = adpMasterRepository.save(record);
                 recordHistory(saved, "SYNCED", buildCreatedDetails(saved));
+                auditLogService.logChange(AuditEntityType.ADP_MASTER, saved.getId(), AuditAction.CREATE,
+                    AuditSource.BULK, actor, null, masterSnapshot(saved), context);
                 added++;
             }
         }
@@ -112,7 +130,7 @@ public class AdpMasterService {
         return new AdpMasterBulkSyncResponse(added, skipped, message);
     }
 
-    public AdpMasterBulkUploadResponse bulkUpload(List<Map<String, Object>> rows) {
+    public AdpMasterBulkUploadResponse bulkUpload(List<Map<String, Object>> rows, User actor, AuditRequestContext context) {
         if (rows == null || rows.isEmpty()) {
             return new AdpMasterBulkUploadResponse(0, 0, 0, "No records provided.");
         }
@@ -124,7 +142,7 @@ public class AdpMasterService {
 
         for (Map<String, Object> row : rows) {
             rowNumber++;
-            UploadResult result = processRow(row, rowNumber);
+            UploadResult result = processRow(row, rowNumber, actor, context);
             added += result.added;
             skipped += result.skipped;
             errorCount += result.errorCount;
@@ -254,7 +272,7 @@ public class AdpMasterService {
         changes.put(field, diff);
     }
 
-    private UploadResult processRow(Map<String, Object> row, int rowNumber) {
+    private UploadResult processRow(Map<String, Object> row, int rowNumber, User actor, AuditRequestContext context) {
         try {
             if (row == null || row.isEmpty()) {
                 return UploadResult.skipped();
@@ -296,16 +314,21 @@ public class AdpMasterService {
                 .findByAdpMakeIdAndAdpModelId(adpMakeId, adpModelId);
             if (existingOpt.isPresent()) {
                 ADPMaster existing = existingOpt.get();
+                Map<String, Object> oldSnapshot = masterSnapshot(existing);
                 Map<String, Map<String, Object>> changes = applyUpdates(existing, incoming, UpdateMode.BULK_UPLOAD);
                 if (!changes.isEmpty()) {
                     adpMasterRepository.save(existing);
                     recordHistory(existing, "BULK_UPLOAD_SYNC", changes);
+                    auditLogService.logChange(AuditEntityType.ADP_MASTER, existing.getId(), AuditAction.UPDATE,
+                        AuditSource.BULK, actor, oldSnapshot, masterSnapshot(existing), context);
                 }
                 return UploadResult.updated();
             }
 
             ADPMaster saved = adpMasterRepository.save(incoming);
             recordHistory(saved, "BULK_UPLOAD_SYNC", buildCreatedDetails(saved));
+            auditLogService.logChange(AuditEntityType.ADP_MASTER, saved.getId(), AuditAction.CREATE, AuditSource.BULK,
+                actor, null, masterSnapshot(saved), context);
             return UploadResult.added();
         } catch (Exception ex) {
             logger.warn("Failed processing ADP bulk upload row {}", rowNumber, ex);
@@ -370,6 +393,27 @@ public class AdpMasterService {
 
     private boolean isBlank(String value) {
         return value == null || value.isBlank();
+    }
+
+    private Map<String, Object> masterSnapshot(ADPMaster master) {
+        if (master == null) {
+            return null;
+        }
+        Map<String, Object> snapshot = new LinkedHashMap<>();
+        snapshot.put("id", master.getId());
+        snapshot.put("adpMakeId", master.getAdpMakeId());
+        snapshot.put("makeEnDesc", master.getMakeEnDesc());
+        snapshot.put("makeArDesc", master.getMakeArDesc());
+        snapshot.put("adpModelId", master.getAdpModelId());
+        snapshot.put("modelEnDesc", master.getModelEnDesc());
+        snapshot.put("modelArDesc", master.getModelArDesc());
+        snapshot.put("adpTypeId", master.getAdpTypeId());
+        snapshot.put("typeEnDesc", master.getTypeEnDesc());
+        snapshot.put("typeArDesc", master.getTypeArDesc());
+        snapshot.put("kindCode", master.getKindCode());
+        snapshot.put("kindEnDesc", master.getKindEnDesc());
+        snapshot.put("kindArDesc", master.getKindArDesc());
+        return snapshot;
     }
 
     private enum UpdateMode {

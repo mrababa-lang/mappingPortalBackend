@@ -6,6 +6,7 @@ import com.slashdata.vehicleportal.dto.AdpTypeMapRequest;
 import com.slashdata.vehicleportal.dto.AdpTypeExportRow;
 import com.slashdata.vehicleportal.dto.ApiResponse;
 import com.slashdata.vehicleportal.dto.PagedResponse;
+import com.slashdata.vehicleportal.dto.AuditRequestContext;
 import com.slashdata.vehicleportal.entity.ADPMakeMapping;
 import com.slashdata.vehicleportal.entity.ADPTypeMapping;
 import com.slashdata.vehicleportal.entity.Make;
@@ -16,6 +17,7 @@ import com.slashdata.vehicleportal.repository.ADPTypeMappingRepository;
 import com.slashdata.vehicleportal.repository.MakeRepository;
 import com.slashdata.vehicleportal.repository.VehicleTypeRepository;
 import com.slashdata.vehicleportal.service.AdpMappingService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
@@ -75,7 +77,8 @@ public class ADPUniqueController {
 
     @PostMapping("/makes/map")
     @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_ADMIN')")
-    public ApiResponse<ADPMakeMapping> mapMake(@Valid @RequestBody AdpMakeMapRequest request) {
+    public ApiResponse<ADPMakeMapping> mapMake(@Valid @RequestBody AdpMakeMapRequest request,
+                                               HttpServletRequest httpRequest) {
         if (request.getAdpMakeId() == null || request.getAdpMakeId().isBlank()
             || request.getSdMakeId() == null || request.getSdMakeId().isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ADP make id and SD make id are required");
@@ -90,7 +93,8 @@ public class ADPUniqueController {
         mapping.setUpdatedAt(LocalDateTime.now());
 
         ADPMakeMapping saved = adpMakeMappingRepository.save(mapping);
-        adpMappingService.createMissingModelMappingsForMake(request.getAdpMakeId(), sdMake);
+        adpMappingService.createMissingModelMappingsForMake(request.getAdpMakeId(), sdMake,
+            AuditRequestContext.from(httpRequest));
 
         return ApiResponse.of(saved);
     }

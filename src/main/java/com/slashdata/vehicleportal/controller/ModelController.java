@@ -3,12 +3,17 @@ package com.slashdata.vehicleportal.controller;
 import com.slashdata.vehicleportal.dto.ApiResponse;
 import com.slashdata.vehicleportal.dto.PagedResponse;
 import com.slashdata.vehicleportal.dto.ModelRequest;
+import com.slashdata.vehicleportal.dto.AuditRequestContext;
 import com.slashdata.vehicleportal.entity.Model;
+import com.slashdata.vehicleportal.entity.User;
 import com.slashdata.vehicleportal.repository.ModelRepository;
 import com.slashdata.vehicleportal.service.ModelService;
+import com.slashdata.vehicleportal.service.UserLookupService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.security.Principal;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -34,10 +39,13 @@ public class ModelController {
 
     private final ModelRepository modelRepository;
     private final ModelService modelService;
+    private final UserLookupService userLookupService;
 
-    public ModelController(ModelRepository modelRepository, ModelService modelService) {
+    public ModelController(ModelRepository modelRepository, ModelService modelService,
+                           UserLookupService userLookupService) {
         this.modelRepository = modelRepository;
         this.modelService = modelService;
+        this.userLookupService = userLookupService;
     }
 
     @GetMapping
@@ -60,9 +68,13 @@ public class ModelController {
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_ADMIN')")
-    public ResponseEntity<ApiResponse<Model>> create(@Valid @RequestBody ModelRequest request) {
+    public ResponseEntity<ApiResponse<Model>> create(@Valid @RequestBody ModelRequest request,
+                                                     Principal principal,
+                                                     HttpServletRequest httpRequest) {
         try {
-            return ResponseEntity.ok(ApiResponse.of(modelService.create(request)));
+            User actor = userLookupService.findByPrincipal(principal);
+            return ResponseEntity.ok(ApiResponse.of(modelService.create(request, actor,
+                AuditRequestContext.from(httpRequest))));
         } catch (DataIntegrityViolationException ex) {
             return ResponseEntity.badRequest().body(ApiResponse.of(null));
         }
@@ -70,9 +82,13 @@ public class ModelController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_ADMIN')")
-    public ResponseEntity<ApiResponse<Model>> update(@PathVariable Long id, @Valid @RequestBody ModelRequest request) {
+    public ResponseEntity<ApiResponse<Model>> update(@PathVariable Long id, @Valid @RequestBody ModelRequest request,
+                                                     Principal principal,
+                                                     HttpServletRequest httpRequest) {
         try {
-            return ResponseEntity.ok(ApiResponse.of(modelService.update(id, request)));
+            User actor = userLookupService.findByPrincipal(principal);
+            return ResponseEntity.ok(ApiResponse.of(modelService.update(id, request, actor,
+                AuditRequestContext.from(httpRequest))));
         } catch (DataIntegrityViolationException | IllegalArgumentException ex) {
             return ResponseEntity.badRequest().body(ApiResponse.of(null));
         }
@@ -80,8 +96,9 @@ public class ModelController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_ADMIN')")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        modelService.deleteModel(id);
+    public ResponseEntity<Void> delete(@PathVariable Long id, Principal principal, HttpServletRequest httpRequest) {
+        User actor = userLookupService.findByPrincipal(principal);
+        modelService.deleteModel(id, actor, AuditRequestContext.from(httpRequest));
         return ResponseEntity.noContent().build();
     }
 
