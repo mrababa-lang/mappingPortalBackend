@@ -25,7 +25,7 @@ public class ADPMappingBulkController {
         this.adpMappingService = adpMappingService;
     }
 
-    @PostMapping
+    @PostMapping({ "", "/" })
     public ResponseEntity<ApiResponse<String>> bulk(@RequestBody BulkActionRequest request, Principal principal) {
         User actor = adpMappingService.findUser(principal != null ? principal.getName() : null);
         switch (request.getAction()) {

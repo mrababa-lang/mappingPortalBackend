@@ -42,8 +42,8 @@ public class MasterVehicleController {
                                                  @RequestParam(value = "typeId", required = false) Long typeId,
                                                  @RequestParam(value = "kindCode", required = false) String kindCode,
                                                  @PageableDefault(page = 0, size = 20) Pageable pageable) {
-        Page<MasterVehicleView> page = modelRepository.findMasterVehicleViews(normalizeQuery(query), makeId,
-            normalizeTypeId(typeId), normalizeQuery(kindCode), pageable);
+        Page<MasterVehicleView> page = modelRepository.findMasterVehicleViews(normalizeQuery(query),
+            normalizeQuery(makeId), normalizeTypeId(typeId), normalizeQuery(kindCode), pageable);
         return PagedResponse.fromPage(page);
     }
 
@@ -62,8 +62,8 @@ public class MasterVehicleController {
 
         StreamingResponseBody responseBody = outputStream -> {
             try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8));
-                 Stream<MasterVehicleExportRow> rows = modelRepository.streamMasterVehiclesForExport(makeId,
-                     normalizeTypeId(typeId), normalizeQuery(kindCode))) {
+                 Stream<MasterVehicleExportRow> rows = modelRepository.streamMasterVehiclesForExport(
+                     normalizeQuery(makeId), normalizeTypeId(typeId), normalizeQuery(kindCode))) {
                 writeCsvHeader(writer);
                 rows.forEach(row -> writeCsvRow(writer, row));
                 writer.flush();

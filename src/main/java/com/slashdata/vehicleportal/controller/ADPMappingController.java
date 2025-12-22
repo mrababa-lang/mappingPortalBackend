@@ -110,12 +110,23 @@ public class ADPMappingController {
     @DeleteMapping("/{adpId}/reject")
     @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_ADMIN')")
     public ResponseEntity<Void> reject(@PathVariable String adpId, Principal principal) {
+        rejectMapping(adpId, principal);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{adpId}/reject")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MAPPING_ADMIN')")
+    public ResponseEntity<Void> rejectViaPost(@PathVariable String adpId, Principal principal) {
+        rejectMapping(adpId, principal);
+        return ResponseEntity.ok().build();
+    }
+
+    private void rejectMapping(String adpId, Principal principal) {
         if (adpId == null || adpId.isBlank() || "undefined".equalsIgnoreCase(adpId)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ADP mapping id is required");
         }
         User actor = adpMappingService.findUser(principal != null ? principal.getName() : null);
         adpMappingService.reject(adpId, actor);
-        return ResponseEntity.ok().build();
     }
 
     private MappingStatus parseMappingStatus(String mappingType) {
