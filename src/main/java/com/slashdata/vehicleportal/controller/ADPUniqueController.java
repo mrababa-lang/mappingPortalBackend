@@ -83,7 +83,8 @@ public class ADPUniqueController {
         Make sdMake = makeRepository.findById(request.getSdMakeId())
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "SD make not found"));
 
-        ADPMakeMapping mapping = adpMakeMappingRepository.findByAdpMakeId(request.getAdpMakeId())
+        ADPMakeMapping mapping = adpMakeMappingRepository.findTopByAdpMakeIdOrderByUpdatedAtDesc(
+            request.getAdpMakeId())
             .orElseGet(ADPMakeMapping::new);
         mapping.setAdpMakeId(request.getAdpMakeId());
         mapping.setSdMake(sdMake);
